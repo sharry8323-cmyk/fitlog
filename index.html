@@ -1,0 +1,871 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>FitLog — Personal Health Tracker</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #f5f2ee;
+    --surface: #ffffff;
+    --surface2: #f0ece6;
+    --border: rgba(60,40,20,0.12);
+    --border2: rgba(60,40,20,0.22);
+    --text: #1a1208;
+    --text2: #5a4a35;
+    --text3: #9a8a75;
+    --accent: #c8541a;
+    --accent2: #2d6a4f;
+    --accent3: #1a5276;
+    --accent-bg: #fdf0e8;
+    --green-bg: #eaf4f0;
+    --blue-bg: #e8f0f8;
+    --font-display: 'DM Serif Display', serif;
+    --font-body: 'DM Sans', sans-serif;
+    --radius: 12px;
+    --radius-sm: 8px;
+  }
+
+  body {
+    font-family: var(--font-body);
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    font-size: 15px;
+    line-height: 1.5;
+  }
+
+  /* LAYOUT */
+  .app { display: flex; min-height: 100vh; }
+
+  /* SIDEBAR */
+  .sidebar {
+    width: 220px;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    padding: 28px 0;
+    position: fixed;
+    top: 0; left: 0; bottom: 0;
+    z-index: 100;
+  }
+  .logo {
+    padding: 0 22px 28px;
+    border-bottom: 1px solid var(--border);
+  }
+  .logo-name { font-family: var(--font-display); font-size: 22px; color: var(--text); }
+  .logo-tag { font-size: 11px; color: var(--text3); letter-spacing: .06em; text-transform: uppercase; }
+  .nav { padding: 18px 12px; flex: 1; }
+  .nav-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 12px; border-radius: var(--radius-sm);
+    cursor: pointer; font-size: 14px; font-weight: 400;
+    color: var(--text2); transition: all .15s;
+    margin-bottom: 2px; border: none; background: none;
+    width: 100%; text-align: left;
+  }
+  .nav-item:hover { background: var(--surface2); color: var(--text); }
+  .nav-item.active { background: var(--accent-bg); color: var(--accent); font-weight: 500; }
+  .nav-icon { width: 18px; text-align: center; font-size: 15px; }
+  .nav-date { padding: 16px 22px 0; font-size: 12px; color: var(--text3); border-top: 1px solid var(--border); }
+
+  /* MAIN */
+  .main { margin-left: 220px; flex: 1; padding: 32px; max-width: 1000px; }
+
+  /* PAGE HEADER */
+  .page-header { margin-bottom: 28px; }
+  .page-title { font-family: var(--font-display); font-size: 28px; color: var(--text); }
+  .page-sub { font-size: 13px; color: var(--text3); margin-top: 3px; }
+
+  /* METRIC CARDS */
+  .metrics-row { display: grid; grid-template-columns: repeat(4,1fr); gap: 14px; margin-bottom: 28px; }
+  .metric-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 18px 16px;
+  }
+  .metric-label { font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--text3); margin-bottom: 6px; }
+  .metric-value { font-family: var(--font-display); font-size: 26px; color: var(--text); line-height: 1; }
+  .metric-sub { font-size: 12px; color: var(--text3); margin-top: 5px; }
+  .metric-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 4px; }
+  .dot-good { background: var(--accent2); }
+  .dot-warn { background: #e8a020; }
+  .dot-bad { background: #c0392b; }
+
+  /* CARDS */
+  .card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 22px 22px; margin-bottom: 20px;
+  }
+  .card-title {
+    font-size: 12px; letter-spacing: .06em; text-transform: uppercase;
+    color: var(--text3); margin-bottom: 16px; font-weight: 500;
+  }
+
+  /* PROGRESS BARS */
+  .prog-wrap { margin-bottom: 14px; }
+  .prog-meta { display: flex; justify-content: space-between; font-size: 13px; color: var(--text2); margin-bottom: 6px; }
+  .prog-track { height: 7px; background: var(--surface2); border-radius: 4px; overflow: hidden; }
+  .prog-fill { height: 100%; border-radius: 4px; transition: width .4s ease; }
+
+  /* CHARTS */
+  .chart-wrap { position: relative; width: 100%; height: 220px; }
+
+  /* SECTIONS */
+  .section { display: none; }
+  .section.active { display: block; }
+
+  /* MEAL LOGGING */
+  .meal-slot { margin-bottom: 18px; }
+  .meal-slot-header {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 10px;
+  }
+  .meal-slot-label {
+    font-size: 13px; font-weight: 500; color: var(--text2);
+    display: flex; align-items: center; gap: 8px;
+  }
+  .meal-badge {
+    font-size: 10px; letter-spacing: .05em; text-transform: uppercase;
+    padding: 3px 9px; border-radius: 20px; font-weight: 600;
+  }
+  .badge-b { background: #fef9e7; color: #b7950b; }
+  .badge-l { background: #eaf4f0; color: #1e8449; }
+  .badge-s { background: #f8f0fb; color: #7d3c98; }
+  .badge-d { background: #eaf0fb; color: #1a5276; }
+  .meal-input-row { display: flex; gap: 10px; align-items: flex-end; }
+  .meal-textarea {
+    flex: 1; padding: 11px 13px; border: 1px solid var(--border2);
+    border-radius: var(--radius-sm); font-family: var(--font-body);
+    font-size: 14px; color: var(--text); background: var(--surface);
+    resize: none; min-height: 62px; transition: border-color .15s;
+    line-height: 1.5;
+  }
+  .meal-textarea:focus { outline: none; border-color: var(--accent); }
+  .meal-textarea::placeholder { color: var(--text3); }
+  .btn-calc {
+    padding: 11px 16px; background: var(--accent); color: #fff;
+    border: none; border-radius: var(--radius-sm); font-family: var(--font-body);
+    font-size: 13px; font-weight: 500; cursor: pointer; white-space: nowrap;
+    transition: opacity .15s;
+  }
+  .btn-calc:hover { opacity: .88; }
+  .btn-calc:disabled { opacity: .5; cursor: default; }
+  .meal-result {
+    margin-top: 10px; padding: 10px 13px;
+    background: var(--accent-bg); border-radius: var(--radius-sm);
+    font-size: 13px; color: var(--text2); display: none;
+    border-left: 3px solid var(--accent);
+  }
+  .meal-result.show { display: block; }
+  .snack-add-btn {
+    background: none; border: 1px dashed var(--border2); color: var(--text3);
+    font-family: var(--font-body); font-size: 13px; cursor: pointer;
+    padding: 9px 16px; border-radius: var(--radius-sm); width: 100%;
+    transition: all .15s; margin-top: 4px;
+  }
+  .snack-add-btn:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-bg); }
+  .snack-remove { background: none; border: none; color: var(--text3); cursor: pointer; font-size: 16px; padding: 0 4px; }
+  .snack-remove:hover { color: #c0392b; }
+  .meal-divider { border: none; border-top: 1px solid var(--border); margin: 18px 0; }
+  .total-bar {
+    display: flex; justify-content: space-between; align-items: center;
+    background: var(--surface2); border-radius: var(--radius-sm);
+    padding: 12px 16px; font-size: 14px; font-weight: 500;
+  }
+  .total-kcal { font-family: var(--font-display); font-size: 22px; color: var(--accent); }
+
+  /* VITALS FORM */
+  .vitals-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .field-group { }
+  .field-label { font-size: 12px; color: var(--text3); font-weight: 500; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 6px; }
+  .field-input {
+    width: 100%; padding: 10px 12px; border: 1px solid var(--border2);
+    border-radius: var(--radius-sm); font-family: var(--font-body);
+    font-size: 14px; color: var(--text); background: var(--surface);
+    transition: border-color .15s;
+  }
+  .field-input:focus { outline: none; border-color: var(--accent); }
+  .field-hint { font-size: 11px; color: var(--text3); margin-top: 4px; }
+  .save-btn {
+    margin-top: 20px; padding: 13px 28px; background: var(--accent);
+    color: #fff; border: none; border-radius: var(--radius-sm);
+    font-family: var(--font-body); font-size: 14px; font-weight: 500;
+    cursor: pointer; transition: opacity .15s;
+  }
+  .save-btn:hover { opacity: .88; }
+  .save-msg { display: inline-block; margin-left: 14px; font-size: 13px; color: var(--accent2); font-weight: 500; opacity: 0; transition: opacity .3s; }
+
+  /* SUGGESTIONS */
+  .sug-item { display: flex; gap: 14px; padding: 16px 0; border-bottom: 1px solid var(--border); }
+  .sug-item:last-child { border: none; }
+  .sug-icon { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+  .icon-green { background: var(--green-bg); }
+  .icon-orange { background: var(--accent-bg); }
+  .icon-blue { background: var(--blue-bg); }
+  .sug-title { font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 4px; }
+  .sug-body { font-size: 13px; color: var(--text2); line-height: 1.6; }
+  .sug-tag { display: inline-block; font-size: 10px; padding: 2px 8px; border-radius: 20px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; margin-right: 6px; margin-top: 6px; }
+  .tag-diet { background: var(--green-bg); color: var(--accent2); }
+  .tag-exercise { background: var(--blue-bg); color: var(--accent3); }
+  .tag-health { background: var(--accent-bg); color: var(--accent); }
+  .gen-btn {
+    padding: 11px 22px; background: var(--surface2); border: 1px solid var(--border2);
+    border-radius: var(--radius-sm); font-family: var(--font-body); font-size: 14px;
+    font-weight: 500; cursor: pointer; color: var(--text2); transition: all .15s;
+    margin-bottom: 20px;
+  }
+  .gen-btn:hover { background: var(--accent-bg); border-color: var(--accent); color: var(--accent); }
+  .ai-loading { display: none; font-size: 13px; color: var(--text3); padding: 12px 0; }
+  .ai-loading.show { display: block; }
+
+  /* CHART LEGEND */
+  .chart-legend { display: flex; flex-wrap: wrap; gap: 14px; margin-bottom: 12px; }
+  .legend-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text2); }
+  .legend-dot { width: 10px; height: 10px; border-radius: 2px; }
+
+  /* RESPONSIVE */
+  @media (max-width: 700px) {
+    .sidebar { display: none; }
+    .main { margin-left: 0; padding: 20px; }
+    .metrics-row { grid-template-columns: 1fr 1fr; }
+    .vitals-grid { grid-template-columns: 1fr; }
+    .meal-input-row { flex-direction: column; }
+    .btn-calc { width: 100%; }
+  }
+
+  /* ANIMATIONS */
+  @keyframes fadeSlide { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+  .section.active { animation: fadeSlide .2s ease; }
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- SIDEBAR -->
+<nav class="sidebar">
+  <div class="logo">
+    <div class="logo-name">FitLog</div>
+    <div class="logo-tag">Personal health tracker</div>
+  </div>
+  <div class="nav">
+    <button class="nav-item active" onclick="showSection('dashboard', this)">
+      <span class="nav-icon">📊</span> Dashboard
+    </button>
+    <button class="nav-item" onclick="showSection('meals', this)">
+      <span class="nav-icon">🍽️</span> Log meals
+    </button>
+    <button class="nav-item" onclick="showSection('vitals', this)">
+      <span class="nav-icon">💊</span> Log vitals
+    </button>
+    <button class="nav-item" onclick="showSection('trends', this)">
+      <span class="nav-icon">📈</span> Trends
+    </button>
+    <button class="nav-item" onclick="showSection('suggestions', this)">
+      <span class="nav-icon">✨</span> AI suggestions
+    </button>
+  </div>
+  <div class="nav-date" id="nav-date"></div>
+</nav>
+
+<!-- MAIN -->
+<main class="main">
+
+  <!-- DASHBOARD -->
+  <div id="sec-dashboard" class="section active">
+    <div class="page-header">
+      <div class="page-title">Good evening</div>
+      <div class="page-sub">Here's your health snapshot for today</div>
+    </div>
+    <div class="metrics-row">
+      <div class="metric-card">
+        <div class="metric-label">Calories today</div>
+        <div class="metric-value" id="dash-cal">—</div>
+        <div class="metric-sub">Goal: 2,000 kcal</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Steps</div>
+        <div class="metric-value" id="dash-steps">—</div>
+        <div class="metric-sub">Goal: 10,000</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Weight</div>
+        <div class="metric-value" id="dash-weight">—</div>
+        <div class="metric-sub" id="dash-weight-sub">Log vitals to track</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Blood pressure</div>
+        <div class="metric-value" id="dash-bp">—</div>
+        <div class="metric-sub" id="dash-bp-sub">Log vitals to track</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Today's progress</div>
+      <div class="prog-wrap">
+        <div class="prog-meta"><span>Calories</span><span id="prog-cal-lbl">0 / 2,000 kcal</span></div>
+        <div class="prog-track"><div class="prog-fill" id="prog-cal" style="width:0%;background:#c8541a;"></div></div>
+      </div>
+      <div class="prog-wrap">
+        <div class="prog-meta"><span>Steps</span><span id="prog-steps-lbl">0 / 10,000</span></div>
+        <div class="prog-track"><div class="prog-fill" id="prog-steps" style="width:0%;background:#2d6a4f;"></div></div>
+      </div>
+      <div class="prog-wrap">
+        <div class="prog-meta"><span>Distance</span><span id="prog-dist-lbl">0 / 8 km</span></div>
+        <div class="prog-track"><div class="prog-fill" id="prog-dist" style="width:0%;background:#1a5276;"></div></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">7-day overview — calories & steps</div>
+      <div class="chart-legend">
+        <div class="legend-item"><div class="legend-dot" style="background:#c8541a;"></div>Calories (kcal)</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#2d6a4f;"></div>Steps (÷10)</div>
+      </div>
+      <div class="chart-wrap"><canvas id="dashChart"></canvas></div>
+    </div>
+  </div>
+
+  <!-- MEALS -->
+  <div id="sec-meals" class="section">
+    <div class="page-header">
+      <div class="page-title">Log meals</div>
+      <div class="page-sub">Describe your meal naturally — AI will estimate the calories</div>
+    </div>
+
+    <div class="card">
+      <!-- BREAKFAST -->
+      <div class="meal-slot" id="slot-breakfast">
+        <div class="meal-slot-header">
+          <div class="meal-slot-label">
+            🌅 <span class="meal-badge badge-b">Breakfast</span>
+          </div>
+        </div>
+        <div class="meal-input-row">
+          <textarea class="meal-textarea" id="meal-breakfast" placeholder="e.g. 2 idlis with sambar, one cup chai with milk and sugar"></textarea>
+          <button class="btn-calc" onclick="calcMeal('breakfast')">Calculate ↗</button>
+        </div>
+        <div class="meal-result" id="result-breakfast"></div>
+      </div>
+
+      <hr class="meal-divider" />
+
+      <!-- LUNCH -->
+      <div class="meal-slot" id="slot-lunch">
+        <div class="meal-slot-header">
+          <div class="meal-slot-label">
+            ☀️ <span class="meal-badge badge-l">Lunch</span>
+          </div>
+        </div>
+        <div class="meal-input-row">
+          <textarea class="meal-textarea" id="meal-lunch" placeholder="e.g. 3 rotis with dal, mixed sabzi, one katori rice, chaas"></textarea>
+          <button class="btn-calc" onclick="calcMeal('lunch')">Calculate ↗</button>
+        </div>
+        <div class="meal-result" id="result-lunch"></div>
+      </div>
+
+      <hr class="meal-divider" />
+
+      <!-- SNACKS -->
+      <div class="meal-slot-header">
+        <div class="meal-slot-label">
+          🍵 <span class="meal-badge badge-s">Snacks</span>
+        </div>
+      </div>
+      <div id="snacks-container"></div>
+      <button class="snack-add-btn" onclick="addSnack()">+ Add a snack / in-between item</button>
+
+      <hr class="meal-divider" />
+
+      <!-- DINNER -->
+      <div class="meal-slot" id="slot-dinner">
+        <div class="meal-slot-header">
+          <div class="meal-slot-label">
+            🌙 <span class="meal-badge badge-d">Dinner</span>
+          </div>
+        </div>
+        <div class="meal-input-row">
+          <textarea class="meal-textarea" id="meal-dinner" placeholder="e.g. 2 rotis, rajma curry, small bowl of rice, cucumber salad"></textarea>
+          <button class="btn-calc" onclick="calcMeal('dinner')">Calculate ↗</button>
+        </div>
+        <div class="meal-result" id="result-dinner"></div>
+      </div>
+
+      <hr class="meal-divider" />
+
+      <!-- TOTAL -->
+      <div class="total-bar">
+        <span style="color:var(--text2);">Total calories today</span>
+        <span class="total-kcal" id="total-kcal">0 kcal</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- VITALS -->
+  <div id="sec-vitals" class="section">
+    <div class="page-header">
+      <div class="page-title">Log vitals</div>
+      <div class="page-sub">Enter today's health readings before bed</div>
+    </div>
+    <div class="card">
+      <div class="card-title">Activity</div>
+      <div class="vitals-grid">
+        <div class="field-group">
+          <div class="field-label">Steps taken</div>
+          <input class="field-input" type="number" id="v-steps" placeholder="e.g. 7500" />
+        </div>
+        <div class="field-group">
+          <div class="field-label">Distance (km)</div>
+          <input class="field-input" type="number" step="0.1" id="v-dist" placeholder="e.g. 5.2" />
+        </div>
+        <div class="field-group">
+          <div class="field-label">Pace (min/km)</div>
+          <input class="field-input" type="number" step="0.1" id="v-pace" placeholder="e.g. 7.5" />
+          <div class="field-hint">Average pace for your walk/run</div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Body measurements</div>
+      <div class="vitals-grid">
+        <div class="field-group">
+          <div class="field-label">Weight (kg)</div>
+          <input class="field-input" type="number" step="0.1" id="v-weight" placeholder="e.g. 76.2" />
+        </div>
+        <div class="field-group">
+          <div class="field-label">BP — systolic (mmHg)</div>
+          <input class="field-input" type="number" id="v-bp-s" placeholder="e.g. 120" />
+        </div>
+        <div class="field-group">
+          <div class="field-label">BP — diastolic (mmHg)</div>
+          <input class="field-input" type="number" id="v-bp-d" placeholder="e.g. 80" />
+        </div>
+        <div class="field-group">
+          <div class="field-label">Blood sugar — fasting (mg/dL)</div>
+          <input class="field-input" type="number" id="v-bs-f" placeholder="e.g. 95" />
+        </div>
+        <div class="field-group">
+          <div class="field-label">Blood sugar — PP (mg/dL)</div>
+          <input class="field-input" type="number" id="v-bs-pp" placeholder="e.g. 140" />
+          <div class="field-hint">Post-prandial (2 hrs after meal)</div>
+        </div>
+      </div>
+      <div>
+        <button class="save-btn" onclick="saveVitals()">Save today's vitals</button>
+        <span class="save-msg" id="save-msg">✓ Saved!</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- TRENDS -->
+  <div id="sec-trends" class="section">
+    <div class="page-header">
+      <div class="page-title">Trends</div>
+      <div class="page-sub">Your health metrics over time</div>
+    </div>
+    <div class="card">
+      <div class="card-title">Weight (kg)</div>
+      <div class="chart-wrap"><canvas id="wtChart"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Steps per day</div>
+      <div class="chart-wrap"><canvas id="stChart"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Blood sugar — fasting vs post-prandial (mg/dL)</div>
+      <div class="chart-legend">
+        <div class="legend-item"><div class="legend-dot" style="background:#c8541a;"></div>Fasting</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#1a5276;"></div>PP (post-meal)</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#c0392b; opacity:.3;"></div>Fasting limit (100)</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#1a5276; opacity:.3;"></div>PP limit (140)</div>
+      </div>
+      <div class="chart-wrap"><canvas id="bsChart"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Blood pressure (mmHg)</div>
+      <div class="chart-legend">
+        <div class="legend-item"><div class="legend-dot" style="background:#c0392b;"></div>Systolic</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#1a5276;"></div>Diastolic</div>
+      </div>
+      <div class="chart-wrap"><canvas id="bpChart"></canvas></div>
+    </div>
+  </div>
+
+  <!-- SUGGESTIONS -->
+  <div id="sec-suggestions" class="section">
+    <div class="page-header">
+      <div class="page-title">AI suggestions</div>
+      <div class="page-sub">Personalised advice based on your logged data</div>
+    </div>
+    <button class="gen-btn" onclick="generateSuggestions()">✨ Generate fresh suggestions from my data</button>
+    <div class="ai-loading" id="ai-loading">Analysing your health data…</div>
+    <div class="card" id="sug-card">
+      <div id="sug-list">
+        <div class="sug-item">
+          <div class="sug-icon icon-orange">💡</div>
+          <div>
+            <div class="sug-title">Log your data to get suggestions</div>
+            <div class="sug-body">Once you've logged a few days of meals and vitals, click the button above to get personalised AI-powered suggestions for your diet and exercise routine.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</main>
+</div>
+
+<script>
+const API_KEY_PLACEHOLDER = 'YOUR_API_KEY'; // Handled by platform
+
+// ── DATE ────────────────────────────────────────────────────────────────────
+const now = new Date();
+document.getElementById('nav-date').textContent =
+  now.toLocaleDateString('en-IN', { weekday:'long', day:'numeric', month:'short', year:'numeric' });
+
+// ── NAVIGATION ───────────────────────────────────────────────────────────────
+function showSection(id, btn) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+  document.getElementById('sec-' + id).classList.add('active');
+  btn.classList.add('active');
+  if (id === 'trends') setTimeout(buildTrendCharts, 50);
+  if (id === 'dashboard') setTimeout(updateDashboard, 50);
+}
+
+// ── STORAGE ──────────────────────────────────────────────────────────────────
+const TODAY = now.toISOString().slice(0,10);
+
+function getStore() {
+  try { return JSON.parse(localStorage.getItem('fitlog') || '{}'); } catch { return {}; }
+}
+function setStore(d) { localStorage.setItem('fitlog', JSON.stringify(d)); }
+
+function getTodayVitals() { return getStore()[TODAY] || {}; }
+function getAllDays() {
+  const s = getStore();
+  return Object.keys(s).sort().map(k => ({ date: k, ...s[k] }));
+}
+
+// ── CALORIES STATE ────────────────────────────────────────────────────────────
+const mealCals = { breakfast: 0, lunch: 0, dinner: 0 };
+const snackCals = {};
+let snackCount = 0;
+
+function totalCals() {
+  return Object.values(mealCals).reduce((a,b)=>a+b,0) +
+         Object.values(snackCals).reduce((a,b)=>a+b,0);
+}
+function updateTotal() {
+  document.getElementById('total-kcal').textContent = totalCals() + ' kcal';
+  // also persist
+  const s = getStore();
+  if (!s[TODAY]) s[TODAY] = {};
+  s[TODAY].calories = totalCals();
+  setStore(s);
+}
+
+// ── MEAL CALC ─────────────────────────────────────────────────────────────────
+async function calcMeal(slot, snackId) {
+  const inputId = snackId ? 'snack-input-' + snackId : 'meal-' + slot;
+  const resultId = snackId ? 'snack-result-' + snackId : 'result-' + slot;
+  const btnId = snackId ? 'snack-btn-' + snackId : null;
+  const textarea = document.getElementById(inputId);
+  const resultEl = document.getElementById(resultId);
+  const text = textarea.value.trim();
+  if (!text) return;
+
+  const btn = btnId ? document.getElementById(btnId) :
+    textarea.parentElement.querySelector('.btn-calc');
+  btn.disabled = true;
+  btn.textContent = 'Calculating…';
+  resultEl.classList.remove('show');
+
+  try {
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 400,
+        system: `You are a nutrition assistant. When given a description of Indian or international food items, estimate total calories. 
+Reply ONLY with valid JSON in this exact format (no markdown, no explanation):
+{"items":[{"name":"item name","qty":"portion","kcal":number}],"total":number,"note":"brief tip if any"}
+Use standard Indian portion sizes. Be realistic and accurate.`,
+        messages: [{ role: 'user', content: text }]
+      })
+    });
+    const data = await resp.json();
+    const raw = data.content[0].text.trim();
+    const parsed = JSON.parse(raw);
+
+    // render
+    let html = parsed.items.map(it =>
+      `<span style="color:var(--text2)">${it.name} (${it.qty})</span> — <strong>${it.kcal} kcal</strong>`
+    ).join(' &nbsp;·&nbsp; ');
+    html += `<br/><strong style="color:var(--accent)">Total: ${parsed.total} kcal</strong>`;
+    if (parsed.note) html += ` &nbsp;<span style="color:var(--text3)">· ${parsed.note}</span>`;
+    resultEl.innerHTML = html;
+    resultEl.classList.add('show');
+
+    if (snackId) snackCals[snackId] = parsed.total;
+    else mealCals[slot] = parsed.total;
+    updateTotal();
+  } catch(e) {
+    resultEl.innerHTML = '<span style="color:#c0392b">Could not calculate — please check your connection and try again.</span>';
+    resultEl.classList.add('show');
+  }
+
+  btn.disabled = false;
+  btn.textContent = 'Calculate ↗';
+}
+
+// ── SNACKS ────────────────────────────────────────────────────────────────────
+function addSnack() {
+  snackCount++;
+  const id = snackCount;
+  const container = document.getElementById('snacks-container');
+  const div = document.createElement('div');
+  div.className = 'meal-slot';
+  div.id = 'snack-slot-' + id;
+  div.innerHTML = `
+    <div class="meal-slot-header">
+      <div class="meal-slot-label" style="color:var(--text3);font-size:13px;">Snack ${id}</div>
+      <button class="snack-remove" onclick="removeSnack(${id})" title="Remove">✕</button>
+    </div>
+    <div class="meal-input-row">
+      <textarea class="meal-textarea" id="snack-input-${id}" placeholder="e.g. one cup chai, 2 biscuits, handful of roasted chana"></textarea>
+      <button class="btn-calc" id="snack-btn-${id}" onclick="calcMeal(null, ${id})">Calculate ↗</button>
+    </div>
+    <div class="meal-result" id="snack-result-${id}"></div>
+  `;
+  container.appendChild(div);
+}
+function removeSnack(id) {
+  document.getElementById('snack-slot-' + id)?.remove();
+  delete snackCals[id];
+  updateTotal();
+}
+
+// ── VITALS SAVE ───────────────────────────────────────────────────────────────
+function saveVitals() {
+  const s = getStore();
+  if (!s[TODAY]) s[TODAY] = {};
+  const fields = ['steps','dist','pace','weight','bp-s','bp-d','bs-f','bs-pp'];
+  fields.forEach(f => {
+    const el = document.getElementById('v-' + f);
+    if (el && el.value) s[TODAY][f.replace('-','_')] = parseFloat(el.value);
+  });
+  setStore(s);
+  const msg = document.getElementById('save-msg');
+  msg.style.opacity = '1';
+  setTimeout(() => msg.style.opacity = '0', 2500);
+  updateDashboard();
+}
+
+// ── DASHBOARD ─────────────────────────────────────────────────────────────────
+let dashChart;
+function updateDashboard() {
+  const v = getTodayVitals();
+  const cal = v.calories || 0;
+  const steps = v.steps || 0;
+  const dist = v.dist || 0;
+
+  document.getElementById('dash-cal').textContent = cal ? cal + ' kcal' : '—';
+  document.getElementById('dash-steps').textContent = steps ? steps.toLocaleString() : '—';
+  document.getElementById('dash-weight').textContent = v.weight ? v.weight + ' kg' : '—';
+
+  const bps = v.bp_s, bpd = v.bp_d;
+  if (bps && bpd) {
+    document.getElementById('dash-bp').textContent = bps + '/' + bpd;
+    const status = bps >= 140 ? 'High' : bps <= 120 ? 'Normal' : 'Slightly high';
+    const dot = bps >= 140 ? 'dot-bad' : bps <= 120 ? 'dot-good' : 'dot-warn';
+    document.getElementById('dash-bp-sub').innerHTML = `<span class="metric-dot ${dot}"></span>${status}`;
+  }
+
+  const calPct = Math.min(100, Math.round(cal/20));
+  const stepsPct = Math.min(100, Math.round(steps/100));
+  const distPct = Math.min(100, Math.round(dist/8*100));
+  document.getElementById('prog-cal').style.width = calPct + '%';
+  document.getElementById('prog-steps').style.width = stepsPct + '%';
+  document.getElementById('prog-dist').style.width = distPct + '%';
+  document.getElementById('prog-cal-lbl').textContent = cal + ' / 2,000 kcal';
+  document.getElementById('prog-steps-lbl').textContent = steps.toLocaleString() + ' / 10,000';
+  document.getElementById('prog-dist-lbl').textContent = dist.toFixed(1) + ' / 8 km';
+
+  // 7-day combo chart
+  const days = getAllDays().slice(-7);
+  const labels = days.map(d => {
+    const dt = new Date(d.date);
+    return dt.toLocaleDateString('en-IN', { weekday:'short' });
+  });
+  const calArr = days.map(d => d.calories || 0);
+  const stepsArr = days.map(d => (d.steps || 0) / 10); // scale to fit same chart
+
+  if (dashChart) dashChart.destroy();
+  dashChart = new Chart(document.getElementById('dashChart'), {
+    data: {
+      labels,
+      datasets: [
+        {
+          type: 'bar', label: 'Calories', data: calArr,
+          backgroundColor: 'rgba(200,84,26,.25)', borderColor: '#c8541a',
+          borderWidth: 1.5, borderRadius: 4, yAxisID: 'y'
+        },
+        {
+          type: 'line', label: 'Steps (÷10)', data: stepsArr,
+          borderColor: '#2d6a4f', backgroundColor: 'rgba(45,106,79,.08)',
+          tension: .35, pointRadius: 4, pointBackgroundColor: '#2d6a4f',
+          borderWidth: 2, fill: true, yAxisID: 'y'
+        }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        y: { ticks: { font: { size: 11 } }, grid: { color: 'rgba(0,0,0,.06)' } },
+        x: { ticks: { font: { size: 11 } }, grid: { display: false } }
+      }
+    }
+  });
+}
+
+// ── TREND CHARTS ──────────────────────────────────────────────────────────────
+let trendsBuilt = false;
+let wtC, stC, bsC, bpC;
+
+function buildTrendCharts() {
+  const days = getAllDays();
+
+  // Seed demo data if empty (first load)
+  if (days.length < 3) {
+    seedDemoData();
+    return buildTrendCharts();
+  }
+
+  const labels = days.map(d => {
+    const dt = new Date(d.date);
+    return dt.toLocaleDateString('en-IN', { day:'numeric', month:'short' });
+  });
+
+  const cfg = (type, datasets, yExtra) => ({
+    type, data: { labels, datasets },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        y: { ticks: { font: { size: 11 } }, grid: { color: 'rgba(0,0,0,.06)' }, ...yExtra },
+        x: { ticks: { font: { size: 11 }, autoSkip: true, maxTicksLimit: 10 }, grid: { display: false } }
+      }
+    }
+  });
+
+  if (wtC) wtC.destroy();
+  wtC = new Chart(document.getElementById('wtChart'), cfg('line',
+    [{ data: days.map(d=>d.weight||null), borderColor:'#c8541a', backgroundColor:'rgba(200,84,26,.08)', tension:.3, pointRadius:4, pointBackgroundColor:'#c8541a', fill:true, spanGaps:true }]
+  ));
+
+  if (stC) stC.destroy();
+  stC = new Chart(document.getElementById('stChart'), cfg('bar',
+    [{ data: days.map(d=>d.steps||null), backgroundColor:'rgba(45,106,79,.3)', borderColor:'#2d6a4f', borderWidth:1.5, borderRadius:4 }]
+  ));
+
+  if (bsC) bsC.destroy();
+  bsC = new Chart(document.getElementById('bsChart'), cfg('line', [
+    { data: days.map(d=>d.bs_f||null), borderColor:'#c8541a', tension:.3, pointRadius:3, pointBackgroundColor:'#c8541a', spanGaps:true },
+    { data: days.map(d=>d.bs_pp||null), borderColor:'#1a5276', tension:.3, pointRadius:3, pointBackgroundColor:'#1a5276', spanGaps:true },
+    { data: days.map(()=>100), borderColor:'rgba(192,57,43,.25)', borderDash:[5,4], pointRadius:0, borderWidth:1.5 },
+    { data: days.map(()=>140), borderColor:'rgba(26,82,118,.25)', borderDash:[5,4], pointRadius:0, borderWidth:1.5 }
+  ]));
+
+  if (bpC) bpC.destroy();
+  bpC = new Chart(document.getElementById('bpChart'), cfg('line', [
+    { data: days.map(d=>d.bp_s||null), borderColor:'#c0392b', tension:.3, pointRadius:3, pointBackgroundColor:'#c0392b', spanGaps:true },
+    { data: days.map(d=>d.bp_d||null), borderColor:'#1a5276', tension:.3, pointRadius:3, pointBackgroundColor:'#1a5276', spanGaps:true }
+  ]));
+}
+
+function seedDemoData() {
+  const s = getStore();
+  const base = new Date(); base.setDate(base.getDate() - 13);
+  for (let i = 0; i < 14; i++) {
+    const d = new Date(base); d.setDate(d.getDate() + i);
+    const key = d.toISOString().slice(0,10);
+    if (!s[key]) s[key] = {
+      calories: 1700 + Math.round(Math.random()*500),
+      steps: 5000 + Math.round(Math.random()*5000),
+      dist: +(3 + Math.random()*5).toFixed(1),
+      weight: +(78 - i*0.08 + (Math.random()-.5)*.3).toFixed(1),
+      bp_s: 120 + Math.round(Math.random()*14),
+      bp_d: 78 + Math.round(Math.random()*10),
+      bs_f: 90 + Math.round(Math.random()*18),
+      bs_pp: 130 + Math.round(Math.random()*30)
+    };
+  }
+  setStore(s);
+}
+
+// ── AI SUGGESTIONS ────────────────────────────────────────────────────────────
+async function generateSuggestions() {
+  const days = getAllDays().slice(-14);
+  if (days.length === 0) {
+    alert('Please log some vitals first.');
+    return;
+  }
+  document.getElementById('ai-loading').classList.add('show');
+  document.getElementById('sug-card').style.opacity = '.4';
+
+  const summary = days.map(d =>
+    `${d.date}: calories=${d.calories||'?'}, steps=${d.steps||'?'}, weight=${d.weight||'?'}kg, BP=${d.bp_s||'?'}/${d.bp_d||'?'}, fastingBS=${d.bs_f||'?'}, ppBS=${d.bs_pp||'?'}`
+  ).join('\n');
+
+  try {
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        system: `You are a health coach analysing a user's daily health log. Provide 4–5 specific, actionable suggestions.
+Reply ONLY with valid JSON, no markdown:
+{"suggestions":[{"title":"short title","body":"2-3 sentence specific advice","type":"diet|exercise|health","icon":"single emoji"}]}
+Be specific, reference actual numbers from their data. Focus on Indian lifestyle where relevant.`,
+        messages: [{ role: 'user', content: `Here is my last 14 days of health data:\n${summary}\n\nPlease give me specific suggestions.` }]
+      })
+    });
+    const data = await resp.json();
+    const parsed = JSON.parse(data.content[0].text.trim());
+    renderSuggestions(parsed.suggestions);
+  } catch(e) {
+    document.getElementById('sug-list').innerHTML = `<div class="sug-item"><div class="sug-icon icon-orange">⚠️</div><div><div class="sug-title">Could not generate suggestions</div><div class="sug-body">Please check your internet connection and try again.</div></div></div>`;
+  }
+
+  document.getElementById('ai-loading').classList.remove('show');
+  document.getElementById('sug-card').style.opacity = '1';
+}
+
+function renderSuggestions(sugs) {
+  const typeMap = { diet:'tag-diet', exercise:'tag-exercise', health:'tag-health' };
+  const iconMap = { diet:'icon-green', exercise:'icon-blue', health:'icon-orange' };
+  document.getElementById('sug-list').innerHTML = sugs.map(s => `
+    <div class="sug-item">
+      <div class="sug-icon ${iconMap[s.type]||'icon-orange'}">${s.icon}</div>
+      <div>
+        <div class="sug-title">${s.title}</div>
+        <div class="sug-body">${s.body}</div>
+        <span class="sug-tag ${typeMap[s.type]||'tag-health'}">${s.type}</span>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ── INIT ──────────────────────────────────────────────────────────────────────
+updateDashboard();
+</script>
+</body>
+</html>
