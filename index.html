@@ -7,262 +7,196 @@
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <style>
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #f5f2ee; --surface: #fff; --surface2: #f0ece6;
+  --border: rgba(60,40,20,.12); --border2: rgba(60,40,20,.22);
+  --text: #1a1208; --text2: #5a4a35; --text3: #9a8a75;
+  --accent: #c8541a; --accent2: #2d6a4f; --accent3: #1a5276;
+  --accent-bg: #fdf0e8; --green-bg: #eaf4f0; --blue-bg: #e8f0f8;
+  --font-d: 'DM Serif Display', serif; --font-b: 'DM Sans', sans-serif;
+  --r: 14px; --rs: 9px;
+}
+body { font-family: var(--font-b); background: var(--bg); color: var(--text); min-height: 100vh; font-size: 15px; line-height: 1.5; }
 
-  :root {
-    --bg: #f5f2ee;
-    --surface: #ffffff;
-    --surface2: #f0ece6;
-    --border: rgba(60,40,20,0.12);
-    --border2: rgba(60,40,20,0.22);
-    --text: #1a1208;
-    --text2: #5a4a35;
-    --text3: #9a8a75;
-    --accent: #c8541a;
-    --accent2: #2d6a4f;
-    --accent3: #1a5276;
-    --accent-bg: #fdf0e8;
-    --green-bg: #eaf4f0;
-    --blue-bg: #e8f0f8;
-    --font-display: 'DM Serif Display', serif;
-    --font-body: 'DM Sans', sans-serif;
-    --radius: 12px;
-    --radius-sm: 8px;
-  }
+/* ── LAYOUT ── */
+.app { display: flex; min-height: 100vh; }
+.sidebar {
+  width: 220px; background: var(--surface); border-right: 1px solid var(--border);
+  display: flex; flex-direction: column; padding: 28px 0;
+  position: fixed; top: 0; left: 0; bottom: 0; z-index: 100;
+}
+.logo { padding: 0 22px 24px; border-bottom: 1px solid var(--border); }
+.logo-name { font-family: var(--font-d); font-size: 22px; }
+.logo-tag { font-size: 11px; color: var(--text3); letter-spacing: .06em; text-transform: uppercase; }
+.nav { padding: 16px 12px; flex: 1; }
+.nav-item {
+  display: flex; align-items: center; gap: 10px; padding: 10px 12px;
+  border-radius: var(--rs); cursor: pointer; font-size: 14px; color: var(--text2);
+  transition: all .15s; margin-bottom: 2px; border: none; background: none;
+  width: 100%; text-align: left;
+}
+.nav-item:hover { background: var(--surface2); color: var(--text); }
+.nav-item.active { background: var(--accent-bg); color: var(--accent); font-weight: 500; }
+.nav-date { padding: 16px 22px 0; font-size: 12px; color: var(--text3); border-top: 1px solid var(--border); }
+.main { margin-left: 220px; flex: 1; padding: 32px; max-width: 780px; }
 
-  body {
-    font-family: var(--font-body);
-    background: var(--bg);
-    color: var(--text);
-    min-height: 100vh;
-    font-size: 15px;
-    line-height: 1.5;
-  }
+/* ── SECTIONS ── */
+.section { display: none; }
+.section.active { display: block; animation: fadeUp .2s ease; }
+@keyframes fadeUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 
-  /* LAYOUT */
-  .app { display: flex; min-height: 100vh; }
+/* ── PAGE HEADER ── */
+.page-title { font-family: var(--font-d); font-size: 28px; margin-bottom: 4px; }
+.page-sub { font-size: 13px; color: var(--text3); margin-bottom: 24px; }
 
-  /* SIDEBAR */
-  .sidebar {
-    width: 220px;
-    background: var(--surface);
-    border-right: 1px solid var(--border);
-    display: flex;
-    flex-direction: column;
-    padding: 28px 0;
-    position: fixed;
-    top: 0; left: 0; bottom: 0;
-    z-index: 100;
-  }
-  .logo {
-    padding: 0 22px 28px;
-    border-bottom: 1px solid var(--border);
-  }
-  .logo-name { font-family: var(--font-display); font-size: 22px; color: var(--text); }
-  .logo-tag { font-size: 11px; color: var(--text3); letter-spacing: .06em; text-transform: uppercase; }
-  .nav { padding: 18px 12px; flex: 1; }
-  .nav-item {
-    display: flex; align-items: center; gap: 10px;
-    padding: 10px 12px; border-radius: var(--radius-sm);
-    cursor: pointer; font-size: 14px; font-weight: 400;
-    color: var(--text2); transition: all .15s;
-    margin-bottom: 2px; border: none; background: none;
-    width: 100%; text-align: left;
-  }
-  .nav-item:hover { background: var(--surface2); color: var(--text); }
-  .nav-item.active { background: var(--accent-bg); color: var(--accent); font-weight: 500; }
-  .nav-icon { width: 18px; text-align: center; font-size: 15px; }
-  .nav-date { padding: 16px 22px 0; font-size: 12px; color: var(--text3); border-top: 1px solid var(--border); }
+/* ── CARDS ── */
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); padding: 20px; margin-bottom: 16px; }
+.card-title { font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--text3); margin-bottom: 14px; font-weight: 500; }
 
-  /* MAIN */
-  .main { margin-left: 220px; flex: 1; padding: 32px; max-width: 1000px; }
+/* ── ACTION CARDS (Log meals / Log vitals prompts) ── */
+.action-card {
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--r);
+  padding: 20px 22px; margin-bottom: 16px;
+  display: flex; justify-content: space-between; align-items: center; gap: 16px;
+}
+.action-card .ac-left {}
+.action-card .ac-title { font-size: 16px; font-weight: 500; color: var(--text); margin-bottom: 3px; }
+.action-card .ac-sub { font-size: 13px; color: var(--text3); }
+.ac-btn {
+  padding: 10px 18px; background: var(--accent); color: #fff; border: none;
+  border-radius: var(--rs); font-family: var(--font-b); font-size: 13px; font-weight: 500;
+  cursor: pointer; white-space: nowrap; transition: opacity .15s; flex-shrink: 0;
+}
+.ac-btn:hover { opacity: .85; }
+.ac-btn.secondary { background: var(--surface2); color: var(--text2); border: 1px solid var(--border2); }
 
-  /* PAGE HEADER */
-  .page-header { margin-bottom: 28px; }
-  .page-title { font-family: var(--font-display); font-size: 28px; color: var(--text); }
-  .page-sub { font-size: 13px; color: var(--text3); margin-top: 3px; }
+/* ── EXPANDABLE PANEL ── */
+.expand-panel { display: none; border: 1px solid var(--border); border-radius: var(--r); padding: 20px; margin-bottom: 16px; background: var(--surface); }
+.expand-panel.open { display: block; animation: fadeUp .2s ease; }
 
-  /* METRIC CARDS */
-  .metrics-row { display: grid; grid-template-columns: repeat(4,1fr); gap: 14px; margin-bottom: 28px; }
-  .metric-card {
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: var(--radius); padding: 18px 16px;
-  }
-  .metric-label { font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--text3); margin-bottom: 6px; }
-  .metric-value { font-family: var(--font-display); font-size: 26px; color: var(--text); line-height: 1; }
-  .metric-sub { font-size: 12px; color: var(--text3); margin-top: 5px; }
-  .metric-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 4px; }
-  .dot-good { background: var(--accent2); }
-  .dot-warn { background: #e8a020; }
-  .dot-bad { background: #c0392b; }
+/* ── SUMMARY CARDS (after logging) ── */
+.summary-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); padding: 20px; margin-bottom: 16px; }
+.sc-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 14px; }
+.sc-title { font-size: 16px; font-weight: 500; }
+.sc-edit { background: none; border: 1px solid var(--border2); border-radius: var(--rs); padding: 5px 12px; font-size: 12px; color: var(--text3); cursor: pointer; font-family: var(--font-b); }
+.sc-edit:hover { color: var(--accent); border-color: var(--accent); }
+.sc-row { display: flex; justify-content: space-between; font-size: 14px; padding: 6px 0; border-bottom: 1px solid var(--border); color: var(--text2); }
+.sc-row:last-child { border: none; }
+.sc-val { font-weight: 500; color: var(--text); }
+.sc-empty { font-size: 13px; color: var(--text3); font-style: italic; padding: 8px 0; }
 
-  /* CARDS */
-  .card {
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: var(--radius); padding: 22px 22px; margin-bottom: 20px;
-  }
-  .card-title {
-    font-size: 12px; letter-spacing: .06em; text-transform: uppercase;
-    color: var(--text3); margin-bottom: 16px; font-weight: 500;
-  }
+/* ── NOT LOGGED CARD ── */
+.not-logged { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); padding: 18px 20px; margin-bottom: 16px; display: flex; align-items: center; gap: 14px; }
+.nl-icon { font-size: 22px; }
+.nl-text { font-size: 13px; color: var(--text3); }
+.nl-title { font-size: 14px; font-weight: 500; color: var(--text2); margin-bottom: 2px; }
 
-  /* PROGRESS BARS */
-  .prog-wrap { margin-bottom: 14px; }
-  .prog-meta { display: flex; justify-content: space-between; font-size: 13px; color: var(--text2); margin-bottom: 6px; }
-  .prog-track { height: 7px; background: var(--surface2); border-radius: 4px; overflow: hidden; }
-  .prog-fill { height: 100%; border-radius: 4px; transition: width .4s ease; }
+/* ── MEAL LOGGING ── */
+.meal-slot { margin-bottom: 18px; }
+.meal-label { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.meal-badge { font-size: 10px; letter-spacing: .05em; text-transform: uppercase; padding: 3px 9px; border-radius: 20px; font-weight: 600; }
+.badge-b { background: #fef9e7; color: #b7950b; }
+.badge-l { background: var(--green-bg); color: #1e8449; }
+.badge-s { background: #f8f0fb; color: #7d3c98; }
+.badge-d { background: var(--blue-bg); color: #1a5276; }
+.meal-row { display: flex; gap: 8px; align-items: flex-end; }
+.meal-ta {
+  flex: 1; padding: 10px 12px; border: 1px solid var(--border2); border-radius: var(--rs);
+  font-family: var(--font-b); font-size: 14px; color: var(--text); background: var(--surface);
+  resize: none; min-height: 60px; transition: border-color .15s; line-height: 1.5;
+}
+.meal-ta:focus { outline: none; border-color: var(--accent); }
+.meal-ta::placeholder { color: var(--text3); }
+.calc-btn {
+  padding: 10px 14px; background: var(--accent); color: #fff; border: none;
+  border-radius: var(--rs); font-family: var(--font-b); font-size: 13px; font-weight: 500;
+  cursor: pointer; white-space: nowrap; transition: opacity .15s;
+}
+.calc-btn:hover { opacity: .85; }
+.calc-btn:disabled { opacity: .5; cursor: default; }
+.meal-result { margin-top: 8px; padding: 10px 12px; background: var(--accent-bg); border-radius: var(--rs); font-size: 13px; color: var(--text2); display: none; border-left: 3px solid var(--accent); }
+.meal-result.show { display: block; }
+.snack-add { background: none; border: 1px dashed var(--border2); color: var(--text3); font-family: var(--font-b); font-size: 13px; cursor: pointer; padding: 9px 16px; border-radius: var(--rs); width: 100%; transition: all .15s; margin-top: 4px; }
+.snack-add:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-bg); }
+.snack-remove { background: none; border: none; color: var(--text3); cursor: pointer; font-size: 16px; padding: 0 4px; }
+.snack-remove:hover { color: #c0392b; }
+.meal-divider { border: none; border-top: 1px solid var(--border); margin: 16px 0; }
+.total-bar { display: flex; justify-content: space-between; align-items: center; background: var(--surface2); border-radius: var(--rs); padding: 12px 16px; font-size: 14px; font-weight: 500; margin-top: 16px; }
+.total-kcal { font-family: var(--font-d); font-size: 22px; color: var(--accent); }
+.save-meals-btn { width: 100%; margin-top: 14px; padding: 13px; background: var(--accent2); color: #fff; border: none; border-radius: var(--rs); font-family: var(--font-b); font-size: 14px; font-weight: 500; cursor: pointer; transition: opacity .15s; }
+.save-meals-btn:hover { opacity: .88; }
 
-  /* CHARTS */
-  .chart-wrap { position: relative; width: 100%; height: 220px; }
+/* ── VITALS FORM ── */
+.vitals-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.vfield label { display: block; font-size: 12px; color: var(--text3); font-weight: 500; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 5px; }
+.vfield input { width: 100%; padding: 10px 12px; border: 1px solid var(--border2); border-radius: var(--rs); font-family: var(--font-b); font-size: 14px; color: var(--text); background: var(--surface); transition: border-color .15s; }
+.vfield input:focus { outline: none; border-color: var(--accent); }
+.vfield .hint { font-size: 11px; color: var(--text3); margin-top: 3px; }
+.save-vitals-btn { margin-top: 16px; padding: 13px 28px; background: var(--accent); color: #fff; border: none; border-radius: var(--rs); font-family: var(--font-b); font-size: 14px; font-weight: 500; cursor: pointer; transition: opacity .15s; }
+.save-vitals-btn:hover { opacity: .88; }
+.section-subtitle { font-size: 13px; font-weight: 500; color: var(--text2); text-transform: uppercase; letter-spacing: .05em; margin: 16px 0 10px; }
 
-  /* SECTIONS */
-  .section { display: none; }
-  .section.active { display: block; }
+/* ── METRICS ROW ── */
+.metrics-row { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; margin-bottom: 16px; }
+.metric-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); padding: 16px; }
+.metric-label { font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--text3); margin-bottom: 6px; }
+.metric-value { font-family: var(--font-d); font-size: 24px; color: var(--text); line-height: 1; }
+.metric-sub { font-size: 12px; color: var(--text3); margin-top: 5px; }
 
-  /* MEAL LOGGING */
-  .meal-slot { margin-bottom: 18px; }
-  .meal-slot-header {
-    display: flex; justify-content: space-between; align-items: center;
-    margin-bottom: 10px;
-  }
-  .meal-slot-label {
-    font-size: 13px; font-weight: 500; color: var(--text2);
-    display: flex; align-items: center; gap: 8px;
-  }
-  .meal-badge {
-    font-size: 10px; letter-spacing: .05em; text-transform: uppercase;
-    padding: 3px 9px; border-radius: 20px; font-weight: 600;
-  }
-  .badge-b { background: #fef9e7; color: #b7950b; }
-  .badge-l { background: #eaf4f0; color: #1e8449; }
-  .badge-s { background: #f8f0fb; color: #7d3c98; }
-  .badge-d { background: #eaf0fb; color: #1a5276; }
-  .meal-input-row { display: flex; gap: 10px; align-items: flex-end; }
-  .meal-textarea {
-    flex: 1; padding: 11px 13px; border: 1px solid var(--border2);
-    border-radius: var(--radius-sm); font-family: var(--font-body);
-    font-size: 14px; color: var(--text); background: var(--surface);
-    resize: none; min-height: 62px; transition: border-color .15s;
-    line-height: 1.5;
-  }
-  .meal-textarea:focus { outline: none; border-color: var(--accent); }
-  .meal-textarea::placeholder { color: var(--text3); }
-  .btn-calc {
-    padding: 11px 16px; background: var(--accent); color: #fff;
-    border: none; border-radius: var(--radius-sm); font-family: var(--font-body);
-    font-size: 13px; font-weight: 500; cursor: pointer; white-space: nowrap;
-    transition: opacity .15s;
-  }
-  .btn-calc:hover { opacity: .88; }
-  .btn-calc:disabled { opacity: .5; cursor: default; }
-  .meal-result {
-    margin-top: 10px; padding: 10px 13px;
-    background: var(--accent-bg); border-radius: var(--radius-sm);
-    font-size: 13px; color: var(--text2); display: none;
-    border-left: 3px solid var(--accent);
-  }
-  .meal-result.show { display: block; }
-  .snack-add-btn {
-    background: none; border: 1px dashed var(--border2); color: var(--text3);
-    font-family: var(--font-body); font-size: 13px; cursor: pointer;
-    padding: 9px 16px; border-radius: var(--radius-sm); width: 100%;
-    transition: all .15s; margin-top: 4px;
-  }
-  .snack-add-btn:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-bg); }
-  .snack-remove { background: none; border: none; color: var(--text3); cursor: pointer; font-size: 16px; padding: 0 4px; }
-  .snack-remove:hover { color: #c0392b; }
-  .meal-divider { border: none; border-top: 1px solid var(--border); margin: 18px 0; }
-  .total-bar {
-    display: flex; justify-content: space-between; align-items: center;
-    background: var(--surface2); border-radius: var(--radius-sm);
-    padding: 12px 16px; font-size: 14px; font-weight: 500;
-  }
-  .total-kcal { font-family: var(--font-display); font-size: 22px; color: var(--accent); }
+/* ── PROGRESS BARS ── */
+.prog-wrap { margin-bottom: 12px; }
+.prog-meta { display: flex; justify-content: space-between; font-size: 13px; color: var(--text2); margin-bottom: 5px; }
+.prog-track { height: 7px; background: var(--surface2); border-radius: 4px; overflow: hidden; }
+.prog-fill { height: 100%; border-radius: 4px; transition: width .5s ease; }
 
-  /* VITALS FORM */
-  .vitals-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-  .field-group { }
-  .field-label { font-size: 12px; color: var(--text3); font-weight: 500; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 6px; }
-  .field-input {
-    width: 100%; padding: 10px 12px; border: 1px solid var(--border2);
-    border-radius: var(--radius-sm); font-family: var(--font-body);
-    font-size: 14px; color: var(--text); background: var(--surface);
-    transition: border-color .15s;
-  }
-  .field-input:focus { outline: none; border-color: var(--accent); }
-  .field-hint { font-size: 11px; color: var(--text3); margin-top: 4px; }
-  .save-btn {
-    margin-top: 20px; padding: 13px 28px; background: var(--accent);
-    color: #fff; border: none; border-radius: var(--radius-sm);
-    font-family: var(--font-body); font-size: 14px; font-weight: 500;
-    cursor: pointer; transition: opacity .15s;
-  }
-  .save-btn:hover { opacity: .88; }
-  .save-msg { display: inline-block; margin-left: 14px; font-size: 13px; color: var(--accent2); font-weight: 500; opacity: 0; transition: opacity .3s; }
+/* ── CHARTS ── */
+.chart-wrap { position: relative; width: 100%; height: 210px; }
+.chart-legend { display: flex; flex-wrap: wrap; gap: 14px; margin-bottom: 10px; }
+.legend-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text2); }
+.legend-dot { width: 10px; height: 10px; border-radius: 2px; }
 
-  /* SUGGESTIONS */
-  .sug-item { display: flex; gap: 14px; padding: 16px 0; border-bottom: 1px solid var(--border); }
-  .sug-item:last-child { border: none; }
-  .sug-icon { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; margin-top: 1px; }
-  .icon-green { background: var(--green-bg); }
-  .icon-orange { background: var(--accent-bg); }
-  .icon-blue { background: var(--blue-bg); }
-  .sug-title { font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 4px; }
-  .sug-body { font-size: 13px; color: var(--text2); line-height: 1.6; }
-  .sug-tag { display: inline-block; font-size: 10px; padding: 2px 8px; border-radius: 20px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; margin-right: 6px; margin-top: 6px; }
-  .tag-diet { background: var(--green-bg); color: var(--accent2); }
-  .tag-exercise { background: var(--blue-bg); color: var(--accent3); }
-  .tag-health { background: var(--accent-bg); color: var(--accent); }
-  .gen-btn {
-    padding: 11px 22px; background: var(--surface2); border: 1px solid var(--border2);
-    border-radius: var(--radius-sm); font-family: var(--font-body); font-size: 14px;
-    font-weight: 500; cursor: pointer; color: var(--text2); transition: all .15s;
-    margin-bottom: 20px;
-  }
-  .gen-btn:hover { background: var(--accent-bg); border-color: var(--accent); color: var(--accent); }
-  .ai-loading { display: none; font-size: 13px; color: var(--text3); padding: 12px 0; }
-  .ai-loading.show { display: block; }
+/* ── SUGGESTIONS ── */
+.sug-item { display: flex; gap: 14px; padding: 14px 0; border-bottom: 1px solid var(--border); }
+.sug-item:last-child { border: none; }
+.sug-icon { width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 15px; flex-shrink: 0; }
+.icon-green { background: var(--green-bg); } .icon-orange { background: var(--accent-bg); } .icon-blue { background: var(--blue-bg); }
+.sug-title { font-size: 14px; font-weight: 600; margin-bottom: 3px; }
+.sug-body { font-size: 13px; color: var(--text2); line-height: 1.6; }
+.sug-tag { display: inline-block; font-size: 10px; padding: 2px 8px; border-radius: 20px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; margin-top: 5px; }
+.tag-diet { background: var(--green-bg); color: var(--accent2); }
+.tag-exercise { background: var(--blue-bg); color: var(--accent3); }
+.tag-health { background: var(--accent-bg); color: var(--accent); }
+.gen-btn { padding: 11px 22px; background: var(--surface2); border: 1px solid var(--border2); border-radius: var(--rs); font-family: var(--font-b); font-size: 14px; font-weight: 500; cursor: pointer; color: var(--text2); transition: all .15s; margin-bottom: 18px; }
+.gen-btn:hover { background: var(--accent-bg); border-color: var(--accent); color: var(--accent); }
+.ai-loading { display: none; font-size: 13px; color: var(--text3); padding: 10px 0; }
+.ai-loading.show { display: block; }
 
-  /* CHART LEGEND */
-  .chart-legend { display: flex; flex-wrap: wrap; gap: 14px; margin-bottom: 12px; }
-  .legend-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text2); }
-  .legend-dot { width: 10px; height: 10px; border-radius: 2px; }
+/* ── EXPORT / DATA TABLE ── */
+.export-btns { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px; }
+.exp-btn { padding: 11px 20px; border: 1px solid var(--border2); border-radius: var(--rs); font-family: var(--font-b); font-size: 13px; font-weight: 500; cursor: pointer; transition: all .15s; }
+.exp-btn-primary { background: var(--accent2); color: #fff; border-color: var(--accent2); }
+.exp-btn-secondary { background: var(--surface2); color: var(--text2); }
+.exp-btn-danger { background: #fdf0ee; color: #c0392b; border-color: rgba(192,57,43,.3); }
 
-  /* RESPONSIVE */
-  @media (max-width: 700px) {
-    .sidebar { display: none; }
-    .main { margin-left: 0; padding: 16px 16px 90px; }
-    .metrics-row { grid-template-columns: 1fr 1fr; }
-    .vitals-grid { grid-template-columns: 1fr; }
-    .meal-input-row { flex-direction: column; }
-    .btn-calc { width: 100%; }
-  }
+/* ── BOTTOM NAV (mobile) ── */
+.bottom-nav { display: none; position: fixed; bottom: 0; left: 0; right: 0; background: var(--surface); border-top: 1px solid var(--border); padding: 6px 0 max(6px, env(safe-area-inset-bottom)); z-index: 200; justify-content: space-around; }
+.bn-item { display: flex; flex-direction: column; align-items: center; gap: 2px; flex: 1; border: none; background: none; cursor: pointer; color: var(--text3); font-family: var(--font-b); font-size: 10px; padding: 4px 2px; transition: color .15s; }
+.bn-item.active { color: var(--accent); }
+.bn-icon { font-size: 20px; line-height: 1; }
 
-  /* BOTTOM NAV (mobile) */
-  .bottom-nav {
-    display: none;
-    position: fixed; bottom: 0; left: 0; right: 0;
-    background: var(--surface);
-    border-top: 1px solid var(--border);
-    padding: 8px 0 max(8px, env(safe-area-inset-bottom));
-    z-index: 200;
-    justify-content: space-around;
-  }
-  .bn-item {
-    display: flex; flex-direction: column; align-items: center; gap: 3px;
-    flex: 1; border: none; background: none; cursor: pointer;
-    color: var(--text3); font-family: var(--font-body); font-size: 10px;
-    padding: 4px 2px; transition: color .15s;
-  }
-  .bn-item.active { color: var(--accent); }
-  .bn-icon { font-size: 20px; line-height: 1; }
-  @media (max-width: 700px) {
-    .bottom-nav { display: flex; }
-  }
-
-  /* ANIMATIONS */
-  @keyframes fadeSlide { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
-  .section.active { animation: fadeSlide .2s ease; }
+/* ── RESPONSIVE ── */
+@media (max-width: 700px) {
+  .sidebar { display: none; }
+  .main { margin-left: 0; padding: 18px 16px 90px; }
+  .metrics-row { grid-template-columns: 1fr 1fr; }
+  .vitals-grid { grid-template-columns: 1fr; }
+  .meal-row { flex-direction: column; }
+  .calc-btn { width: 100%; }
+  .bottom-nav { display: flex; }
+  .action-card { flex-direction: column; align-items: flex-start; }
+  .ac-btn { width: 100%; text-align: center; }
+}
 </style>
 </head>
 <body>
@@ -275,24 +209,10 @@
     <div class="logo-tag">Personal health tracker</div>
   </div>
   <div class="nav">
-    <button class="nav-item active" onclick="showSection('dashboard', this)">
-      <span class="nav-icon">📊</span> Dashboard
-    </button>
-    <button class="nav-item" onclick="showSection('meals', this)">
-      <span class="nav-icon">🍽️</span> Log meals
-    </button>
-    <button class="nav-item" onclick="showSection('vitals', this)">
-      <span class="nav-icon">💊</span> Log vitals
-    </button>
-    <button class="nav-item" onclick="showSection('trends', this)">
-      <span class="nav-icon">📈</span> Trends
-    </button>
-    <button class="nav-item" onclick="showSection('suggestions', this)">
-      <span class="nav-icon">✨</span> AI suggestions
-    </button>
-    <button class="nav-item" onclick="showSection('data', this)">
-      <span class="nav-icon">📋</span> Data & export
-    </button>
+    <button class="nav-item active" onclick="showSection('home',this)" data-sec="home"><span>🏠</span> Home</button>
+    <button class="nav-item" onclick="showSection('trends',this)" data-sec="trends"><span>📈</span> Trends</button>
+    <button class="nav-item" onclick="showSection('suggestions',this)" data-sec="suggestions"><span>✨</span> AI suggestions</button>
+    <button class="nav-item" onclick="showSection('data',this)" data-sec="data"><span>📋</span> Data & export</button>
   </div>
   <div class="nav-date" id="nav-date"></div>
 </nav>
@@ -300,276 +220,216 @@
 <!-- MAIN -->
 <main class="main">
 
-  <!-- DASHBOARD -->
-  <div id="sec-dashboard" class="section active">
-    <div class="page-header">
-      <div class="page-title">Good evening</div>
-      <div class="page-sub">Here's your health snapshot for today</div>
-    </div>
-    <div class="metrics-row">
-      <div class="metric-card">
-        <div class="metric-label">Calories today</div>
-        <div class="metric-value" id="dash-cal">—</div>
-        <div class="metric-sub">Goal: 2,000 kcal</div>
+  <!-- ══════════ HOME ══════════ -->
+  <div id="sec-home" class="section active">
+    <div class="page-title" id="home-greeting">Good morning</div>
+    <div class="page-sub" id="home-date"></div>
+
+    <!-- MEALS ACTION / PANEL / SUMMARY -->
+    <div id="meals-action" class="action-card">
+      <div class="ac-left">
+        <div class="ac-title">🍽️ Log today's meals</div>
+        <div class="ac-sub">Tap to enter breakfast, lunch, snacks & dinner</div>
       </div>
-      <div class="metric-card">
-        <div class="metric-label">Steps</div>
-        <div class="metric-value" id="dash-steps">—</div>
-        <div class="metric-sub">Goal: 10,000</div>
-      </div>
-      <div class="metric-card">
-        <div class="metric-label">Weight</div>
-        <div class="metric-value" id="dash-weight">—</div>
-        <div class="metric-sub" id="dash-weight-sub">Log vitals to track</div>
-      </div>
-      <div class="metric-card">
-        <div class="metric-label">Blood pressure</div>
-        <div class="metric-value" id="dash-bp">—</div>
-        <div class="metric-sub" id="dash-bp-sub">Log vitals to track</div>
-      </div>
+      <button class="ac-btn" onclick="openMeals()">Log meals</button>
     </div>
 
-    <div class="card">
-      <div class="card-title">Today's progress</div>
-      <div class="prog-wrap">
-        <div class="prog-meta"><span>Calories</span><span id="prog-cal-lbl">0 / 2,000 kcal</span></div>
-        <div class="prog-track"><div class="prog-fill" id="prog-cal" style="width:0%;background:#c8541a;"></div></div>
-      </div>
-      <div class="prog-wrap">
-        <div class="prog-meta"><span>Steps</span><span id="prog-steps-lbl">0 / 10,000</span></div>
-        <div class="prog-track"><div class="prog-fill" id="prog-steps" style="width:0%;background:#2d6a4f;"></div></div>
-      </div>
-      <div class="prog-wrap">
-        <div class="prog-meta"><span>Distance</span><span id="prog-dist-lbl">0 / 8 km</span></div>
-        <div class="prog-track"><div class="prog-fill" id="prog-dist" style="width:0%;background:#1a5276;"></div></div>
-      </div>
-    </div>
+    <div id="meals-panel" class="expand-panel">
+      <div class="card-title">Today's meals — describe naturally, AI calculates calories</div>
 
-    <div class="card">
-      <div class="card-title">7-day overview — calories & steps</div>
-      <div class="chart-legend">
-        <div class="legend-item"><div class="legend-dot" style="background:#c8541a;"></div>Calories (kcal)</div>
-        <div class="legend-item"><div class="legend-dot" style="background:#2d6a4f;"></div>Steps (÷10)</div>
-      </div>
-      <div class="chart-wrap"><canvas id="dashChart"></canvas></div>
-    </div>
-  </div>
-
-  <!-- MEALS -->
-  <div id="sec-meals" class="section">
-    <div class="page-header">
-      <div class="page-title">Log meals</div>
-      <div class="page-sub">Describe your meal naturally — AI will estimate the calories</div>
-    </div>
-
-    <div class="card">
-      <!-- BREAKFAST -->
-      <div class="meal-slot" id="slot-breakfast">
-        <div class="meal-slot-header">
-          <div class="meal-slot-label">
-            🌅 <span class="meal-badge badge-b">Breakfast</span>
-          </div>
-        </div>
-        <div class="meal-input-row">
-          <textarea class="meal-textarea" id="meal-breakfast" placeholder="e.g. 2 idlis with sambar, one cup chai with milk and sugar"></textarea>
-          <button class="btn-calc" onclick="calcMeal('breakfast')">Calculate ↗</button>
+      <!-- Breakfast -->
+      <div class="meal-slot">
+        <div class="meal-label">🌅 <span class="meal-badge badge-b">Breakfast</span></div>
+        <div class="meal-row">
+          <textarea class="meal-ta" id="meal-breakfast" placeholder="e.g. 2 idlis with sambar, one cup chai"></textarea>
+          <button class="calc-btn" onclick="calcMeal('breakfast')">Calculate ↗</button>
         </div>
         <div class="meal-result" id="result-breakfast"></div>
       </div>
+      <hr class="meal-divider"/>
 
-      <hr class="meal-divider" />
-
-      <!-- LUNCH -->
-      <div class="meal-slot" id="slot-lunch">
-        <div class="meal-slot-header">
-          <div class="meal-slot-label">
-            ☀️ <span class="meal-badge badge-l">Lunch</span>
-          </div>
-        </div>
-        <div class="meal-input-row">
-          <textarea class="meal-textarea" id="meal-lunch" placeholder="e.g. 3 rotis with dal, mixed sabzi, one katori rice, chaas"></textarea>
-          <button class="btn-calc" onclick="calcMeal('lunch')">Calculate ↗</button>
+      <!-- Lunch -->
+      <div class="meal-slot">
+        <div class="meal-label">☀️ <span class="meal-badge badge-l">Lunch</span></div>
+        <div class="meal-row">
+          <textarea class="meal-ta" id="meal-lunch" placeholder="e.g. 3 rotis, dal, sabzi, chaas"></textarea>
+          <button class="calc-btn" onclick="calcMeal('lunch')">Calculate ↗</button>
         </div>
         <div class="meal-result" id="result-lunch"></div>
       </div>
+      <hr class="meal-divider"/>
 
-      <hr class="meal-divider" />
-
-      <!-- SNACKS -->
-      <div class="meal-slot-header">
-        <div class="meal-slot-label">
-          🍵 <span class="meal-badge badge-s">Snacks</span>
-        </div>
+      <!-- Snacks -->
+      <div>
+        <div class="meal-label">🍵 <span class="meal-badge badge-s">Snacks</span></div>
+        <div id="snacks-container"></div>
+        <button class="snack-add" onclick="addSnack()">+ Add a snack / in-between item</button>
       </div>
-      <div id="snacks-container"></div>
-      <button class="snack-add-btn" onclick="addSnack()">+ Add a snack / in-between item</button>
+      <hr class="meal-divider"/>
 
-      <hr class="meal-divider" />
-
-      <!-- DINNER -->
-      <div class="meal-slot" id="slot-dinner">
-        <div class="meal-slot-header">
-          <div class="meal-slot-label">
-            🌙 <span class="meal-badge badge-d">Dinner</span>
-          </div>
-        </div>
-        <div class="meal-input-row">
-          <textarea class="meal-textarea" id="meal-dinner" placeholder="e.g. 2 rotis, rajma curry, small bowl of rice, cucumber salad"></textarea>
-          <button class="btn-calc" onclick="calcMeal('dinner')">Calculate ↗</button>
+      <!-- Dinner -->
+      <div class="meal-slot">
+        <div class="meal-label">🌙 <span class="meal-badge badge-d">Dinner</span></div>
+        <div class="meal-row">
+          <textarea class="meal-ta" id="meal-dinner" placeholder="e.g. 2 rotis, rajma, small bowl of rice"></textarea>
+          <button class="calc-btn" onclick="calcMeal('dinner')">Calculate ↗</button>
         </div>
         <div class="meal-result" id="result-dinner"></div>
       </div>
 
-      <hr class="meal-divider" />
-
-      <!-- TOTAL -->
       <div class="total-bar">
-        <span style="color:var(--text2);">Total calories today</span>
+        <span style="color:var(--text2)">Total calories today</span>
         <span class="total-kcal" id="total-kcal">0 kcal</span>
       </div>
+      <button class="save-meals-btn" onclick="saveMeals()">✓ Save & done</button>
     </div>
-  </div>
 
-  <!-- VITALS -->
-  <div id="sec-vitals" class="section">
-    <div class="page-header">
-      <div class="page-title">Log vitals</div>
-      <div class="page-sub">Enter today's health readings before bed</div>
-    </div>
-    <div class="card">
-      <div class="card-title">Activity</div>
-      <div class="vitals-grid">
-        <div class="field-group">
-          <div class="field-label">Steps taken</div>
-          <input class="field-input" type="number" id="v-steps" placeholder="e.g. 7500" />
-        </div>
-        <div class="field-group">
-          <div class="field-label">Distance (km)</div>
-          <input class="field-input" type="number" step="0.1" id="v-dist" placeholder="e.g. 5.2" />
-        </div>
-        <div class="field-group">
-          <div class="field-label">Pace (min/km)</div>
-          <input class="field-input" type="number" step="0.1" id="v-pace" placeholder="e.g. 7.5" />
-          <div class="field-hint">Average pace for your walk/run</div>
-        </div>
+    <div id="meals-summary" class="summary-card" style="display:none;">
+      <div class="sc-header">
+        <div class="sc-title">🍽️ Meals logged</div>
+        <button class="sc-edit" onclick="editMeals()">Edit</button>
       </div>
+      <div id="meals-summary-body"></div>
     </div>
-    <div class="card">
-      <div class="card-title">Body measurements</div>
-      <div class="vitals-grid">
-        <div class="field-group">
-          <div class="field-label">Weight (kg)</div>
-          <input class="field-input" type="number" step="0.1" id="v-weight" placeholder="e.g. 76.2" />
-        </div>
-        <div class="field-group">
-          <div class="field-label">BP — systolic (mmHg)</div>
-          <input class="field-input" type="number" id="v-bp-s" placeholder="e.g. 120" />
-        </div>
-        <div class="field-group">
-          <div class="field-label">BP — diastolic (mmHg)</div>
-          <input class="field-input" type="number" id="v-bp-d" placeholder="e.g. 80" />
-        </div>
-        <div class="field-group">
-          <div class="field-label">Blood sugar — fasting (mg/dL)</div>
-          <input class="field-input" type="number" id="v-bs-f" placeholder="e.g. 95" />
-        </div>
-        <div class="field-group">
-          <div class="field-label">Blood sugar — PP (mg/dL)</div>
-          <input class="field-input" type="number" id="v-bs-pp" placeholder="e.g. 140" />
-          <div class="field-hint">Post-prandial (2 hrs after meal)</div>
-        </div>
-      </div>
-      <div>
-        <button class="save-btn" onclick="saveVitals()">Save today's vitals</button>
-        <span class="save-msg" id="save-msg">✓ Saved!</span>
-      </div>
-    </div>
-  </div>
 
-  <!-- TRENDS -->
+    <!-- VITALS ACTION / PANEL / SUMMARY -->
+    <div id="vitals-action" class="action-card">
+      <div class="ac-left">
+        <div class="ac-title">💊 Log today's vitals</div>
+        <div class="ac-sub">Steps, weight, blood pressure & blood sugar</div>
+      </div>
+      <button class="ac-btn" onclick="openVitals()">Log vitals</button>
+    </div>
+
+    <div id="vitals-panel" class="expand-panel">
+      <div class="section-subtitle">Activity</div>
+      <div class="vitals-grid">
+        <div class="vfield"><label>Steps taken</label><input type="number" id="v-steps" placeholder="e.g. 7500"/></div>
+        <div class="vfield"><label>Distance (km)</label><input type="number" step="0.1" id="v-dist" placeholder="e.g. 5.2"/></div>
+        <div class="vfield"><label>Pace (min/km)</label><input type="number" step="0.1" id="v-pace" placeholder="e.g. 7.5"/><div class="hint">Average walking/running pace</div></div>
+      </div>
+      <div class="section-subtitle">Body measurements</div>
+      <div class="vitals-grid">
+        <div class="vfield"><label>Weight (kg)</label><input type="number" step="0.1" id="v-weight" placeholder="e.g. 76.2"/></div>
+        <div class="vfield"><label>BP — systolic</label><input type="number" id="v-bps" placeholder="e.g. 120"/></div>
+        <div class="vfield"><label>BP — diastolic</label><input type="number" id="v-bpd" placeholder="e.g. 80"/></div>
+        <div class="vfield"><label>Blood sugar fasting</label><input type="number" id="v-bsf" placeholder="mg/dL"/></div>
+        <div class="vfield"><label>Blood sugar PP</label><input type="number" id="v-bspp" placeholder="mg/dL"/><div class="hint">2 hrs after meal</div></div>
+      </div>
+      <button class="save-vitals-btn" onclick="saveVitals()">✓ Save vitals</button>
+    </div>
+
+    <div id="vitals-summary" class="summary-card" style="display:none;">
+      <div class="sc-header">
+        <div class="sc-title">💊 Vitals logged</div>
+        <button class="sc-edit" onclick="editVitals()">Edit</button>
+      </div>
+      <div id="vitals-summary-body"></div>
+    </div>
+
+    <!-- DAILY SUMMARY CARDS (shown once both logged) -->
+    <div id="daily-cards" style="display:none;">
+      <div class="card" style="margin-top:8px;">
+        <div class="card-title">Today's progress</div>
+        <div class="prog-wrap">
+          <div class="prog-meta"><span>Calories</span><span id="prog-cal-lbl">—</span></div>
+          <div class="prog-track"><div class="prog-fill" id="prog-cal" style="width:0%;background:var(--accent);"></div></div>
+        </div>
+        <div class="prog-wrap">
+          <div class="prog-meta"><span>Steps</span><span id="prog-steps-lbl">—</span></div>
+          <div class="prog-track"><div class="prog-fill" id="prog-steps" style="width:0%;background:var(--accent2);"></div></div>
+        </div>
+        <div class="prog-wrap">
+          <div class="prog-meta"><span>Distance</span><span id="prog-dist-lbl">—</span></div>
+          <div class="prog-track"><div class="prog-fill" id="prog-dist" style="width:0%;background:var(--accent3);"></div></div>
+        </div>
+      </div>
+      <div class="metrics-row">
+        <div class="metric-card"><div class="metric-label">Calories</div><div class="metric-value" id="dc-cal">—</div><div class="metric-sub">Goal: 2,000</div></div>
+        <div class="metric-card"><div class="metric-label">Steps</div><div class="metric-value" id="dc-steps">—</div><div class="metric-sub">Goal: 10,000</div></div>
+        <div class="metric-card"><div class="metric-label">Weight</div><div class="metric-value" id="dc-weight">—</div><div class="metric-sub" id="dc-weight-sub"></div></div>
+        <div class="metric-card"><div class="metric-label">Blood pressure</div><div class="metric-value" id="dc-bp">—</div><div class="metric-sub" id="dc-bp-sub"></div></div>
+      </div>
+    </div>
+
+  </div><!-- /home -->
+
+  <!-- ══════════ TRENDS ══════════ -->
   <div id="sec-trends" class="section">
-    <div class="page-header">
-      <div class="page-title">Trends</div>
-      <div class="page-sub">Your health metrics over time</div>
+    <div class="page-title">Trends</div>
+    <div class="page-sub">Your health metrics over time</div>
+    <div id="trends-empty" class="not-logged" style="display:none;">
+      <div class="nl-icon">📊</div>
+      <div><div class="nl-title">No data yet</div><div class="nl-text">Start logging daily to see your trends here.</div></div>
     </div>
-    <div class="card">
-      <div class="card-title">Weight (kg)</div>
-      <div class="chart-wrap"><canvas id="wtChart"></canvas></div>
-    </div>
-    <div class="card">
-      <div class="card-title">Steps per day</div>
-      <div class="chart-wrap"><canvas id="stChart"></canvas></div>
-    </div>
-    <div class="card">
-      <div class="card-title">Blood sugar — fasting vs post-prandial (mg/dL)</div>
-      <div class="chart-legend">
-        <div class="legend-item"><div class="legend-dot" style="background:#c8541a;"></div>Fasting</div>
-        <div class="legend-item"><div class="legend-dot" style="background:#1a5276;"></div>PP (post-meal)</div>
-        <div class="legend-item"><div class="legend-dot" style="background:#c0392b; opacity:.3;"></div>Fasting limit (100)</div>
-        <div class="legend-item"><div class="legend-dot" style="background:#1a5276; opacity:.3;"></div>PP limit (140)</div>
+    <div id="trends-charts">
+      <div class="card"><div class="card-title">Calories & steps — 7 day</div>
+        <div class="chart-legend">
+          <div class="legend-item"><div class="legend-dot" style="background:var(--accent);"></div>Calories (kcal)</div>
+          <div class="legend-item"><div class="legend-dot" style="background:var(--accent2);"></div>Steps (÷10)</div>
+        </div>
+        <div class="chart-wrap"><canvas id="dashChart"></canvas></div>
       </div>
-      <div class="chart-wrap"><canvas id="bsChart"></canvas></div>
-    </div>
-    <div class="card">
-      <div class="card-title">Blood pressure (mmHg)</div>
-      <div class="chart-legend">
-        <div class="legend-item"><div class="legend-dot" style="background:#c0392b;"></div>Systolic</div>
-        <div class="legend-item"><div class="legend-dot" style="background:#1a5276;"></div>Diastolic</div>
+      <div class="card"><div class="card-title">Weight (kg)</div><div class="chart-wrap"><canvas id="wtChart"></canvas></div></div>
+      <div class="card">
+        <div class="card-title">Blood sugar — fasting vs post-prandial (mg/dL)</div>
+        <div class="chart-legend">
+          <div class="legend-item"><div class="legend-dot" style="background:var(--accent);"></div>Fasting</div>
+          <div class="legend-item"><div class="legend-dot" style="background:var(--accent3);"></div>PP</div>
+        </div>
+        <div class="chart-wrap"><canvas id="bsChart"></canvas></div>
       </div>
-      <div class="chart-wrap"><canvas id="bpChart"></canvas></div>
+      <div class="card">
+        <div class="card-title">Blood pressure (mmHg)</div>
+        <div class="chart-legend">
+          <div class="legend-item"><div class="legend-dot" style="background:#c0392b;"></div>Systolic</div>
+          <div class="legend-item"><div class="legend-dot" style="background:var(--accent3);"></div>Diastolic</div>
+        </div>
+        <div class="chart-wrap"><canvas id="bpChart"></canvas></div>
+      </div>
     </div>
   </div>
 
-  <!-- SUGGESTIONS -->
+  <!-- ══════════ SUGGESTIONS ══════════ -->
   <div id="sec-suggestions" class="section">
-    <div class="page-header">
-      <div class="page-title">AI suggestions</div>
-      <div class="page-sub">Personalised advice based on your logged data</div>
-    </div>
-    <button class="gen-btn" onclick="generateSuggestions()">✨ Generate fresh suggestions from my data</button>
+    <div class="page-title">AI suggestions</div>
+    <div class="page-sub">Personalised advice based on your logged data</div>
+    <button class="gen-btn" onclick="generateSuggestions()">✨ Generate fresh suggestions</button>
     <div class="ai-loading" id="ai-loading">Analysing your health data…</div>
     <div class="card" id="sug-card">
       <div id="sug-list">
         <div class="sug-item">
           <div class="sug-icon icon-orange">💡</div>
-          <div>
-            <div class="sug-title">Log your data to get suggestions</div>
-            <div class="sug-body">Once you've logged a few days of meals and vitals, click the button above to get personalised AI-powered suggestions for your diet and exercise routine.</div>
-          </div>
+          <div><div class="sug-title">Log your data first</div>
+          <div class="sug-body">Log a few days of meals and vitals, then tap the button above for personalised suggestions.</div></div>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- DATA & EXPORT -->
+  <!-- ══════════ DATA & EXPORT ══════════ -->
   <div id="sec-data" class="section">
-    <div class="page-header">
-      <div class="page-title">Data & export</div>
-      <div class="page-sub">View and download all your logged health data</div>
+    <div class="page-title">Data & export</div>
+    <div class="page-sub">View and download all your logged health data</div>
+    <div class="export-btns">
+      <button class="exp-btn exp-btn-primary" onclick="exportCSV()">⬇ Export to Excel / CSV</button>
+      <button class="exp-btn exp-btn-secondary" onclick="exportJSON()">⬇ JSON backup</button>
+      <button class="exp-btn exp-btn-danger" onclick="clearAll()">🗑 Clear all data</button>
     </div>
-
-    <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px;">
-      <button class="save-btn" onclick="exportCSV()" style="margin-top:0;">⬇ Export to Excel / CSV</button>
-      <button class="save-btn" onclick="exportJSON()" style="margin-top:0;background:var(--accent2);">⬇ Export as JSON backup</button>
-      <button class="save-btn" onclick="if(confirm('This will delete ALL your data. Are you sure?')) { localStorage.removeItem(\'fitlog\'); location.reload(); }" style="margin-top:0;background:#c0392b;">🗑 Clear all data</button>
-    </div>
-
     <div class="card">
-      <div class="card-title">All logged entries — <span id="data-count">0</span> days</div>
+      <div class="card-title">All entries — <span id="data-count">0</span> days logged</div>
       <div style="overflow-x:auto;">
         <table id="data-table" style="width:100%;border-collapse:collapse;font-size:13px;">
           <thead>
             <tr style="border-bottom:2px solid var(--border2);text-align:left;">
-              <th style="padding:10px 8px;color:var(--text3);font-weight:500;white-space:nowrap;">Date</th>
-              <th style="padding:10px 8px;color:var(--text3);font-weight:500;white-space:nowrap;">Calories</th>
-              <th style="padding:10px 8px;color:var(--text3);font-weight:500;white-space:nowrap;">Steps</th>
-              <th style="padding:10px 8px;color:var(--text3);font-weight:500;white-space:nowrap;">Dist (km)</th>
-              <th style="padding:10px 8px;color:var(--text3);font-weight:500;white-space:nowrap;">Pace</th>
-              <th style="padding:10px 8px;color:var(--text3);font-weight:500;white-space:nowrap;">Weight (kg)</th>
-              <th style="padding:10px 8px;color:var(--text3);font-weight:500;white-space:nowrap;">BP Sys</th>
-              <th style="padding:10px 8px;color:var(--text3);font-weight:500;white-space:nowrap;">BP Dia</th>
-              <th style="padding:10px 8px;color:var(--text3);font-weight:500;white-space:nowrap;">BS Fasting</th>
-              <th style="padding:10px 8px;color:var(--text3);font-weight:500;white-space:nowrap;">BS PP</th>
+              <th style="padding:9px 8px;color:var(--text3);font-weight:500;white-space:nowrap;">Date</th>
+              <th style="padding:9px 8px;color:var(--text3);font-weight:500;">Calories</th>
+              <th style="padding:9px 8px;color:var(--text3);font-weight:500;">Steps</th>
+              <th style="padding:9px 8px;color:var(--text3);font-weight:500;white-space:nowrap;">Dist km</th>
+              <th style="padding:9px 8px;color:var(--text3);font-weight:500;">Weight</th>
+              <th style="padding:9px 8px;color:var(--text3);font-weight:500;white-space:nowrap;">BP</th>
+              <th style="padding:9px 8px;color:var(--text3);font-weight:500;white-space:nowrap;">BS Fast</th>
+              <th style="padding:9px 8px;color:var(--text3);font-weight:500;white-space:nowrap;">BS PP</th>
             </tr>
           </thead>
           <tbody id="data-tbody"></tbody>
@@ -581,37 +441,24 @@
 </main>
 </div>
 
-<!-- BOTTOM NAV (mobile only) -->
-<nav class="bottom-nav" id="bottom-nav">
-  <button class="bn-item active" onclick="showSection('dashboard', this)" data-sec="dashboard">
-    <span class="bn-icon">📊</span>Home
-  </button>
-  <button class="bn-item" onclick="showSection('meals', this)" data-sec="meals">
-    <span class="bn-icon">🍽️</span>Meals
-  </button>
-  <button class="bn-item" onclick="showSection('vitals', this)" data-sec="vitals">
-    <span class="bn-icon">💊</span>Vitals
-  </button>
-  <button class="bn-item" onclick="showSection('trends', this)" data-sec="trends">
-    <span class="bn-icon">📈</span>Trends
-  </button>
-  <button class="bn-item" onclick="showSection('suggestions', this)" data-sec="suggestions">
-    <span class="bn-icon">✨</span>AI
-  </button>
-  <button class="bn-item" onclick="showSection('data', this)" data-sec="data">
-    <span class="bn-icon">📋</span>Export
-  </button>
+<!-- BOTTOM NAV -->
+<nav class="bottom-nav">
+  <button class="bn-item active" onclick="showSection('home',this)" data-sec="home"><span class="bn-icon">🏠</span>Home</button>
+  <button class="bn-item" onclick="showSection('trends',this)" data-sec="trends"><span class="bn-icon">📈</span>Trends</button>
+  <button class="bn-item" onclick="showSection('suggestions',this)" data-sec="suggestions"><span class="bn-icon">✨</span>AI</button>
+  <button class="bn-item" onclick="showSection('data',this)" data-sec="data"><span class="bn-icon">📋</span>Export</button>
 </nav>
 
 <script>
+// ── API KEY ──────────────────────────────────────────────────────────────────
 let API_KEY = localStorage.getItem('fitlog_gemini_key') || '';
 if (!API_KEY) {
-  API_KEY = prompt('Enter your free Gemini API key to enable AI features:\n\nGet one free at: aistudio.google.com\n→ Sign in with Google → click "Get API Key" → Create API key\n\nNo credit card needed!') || '';
+  API_KEY = prompt('Enter your free Gemini API key to enable AI features:\n\nGet one free at: aistudio.google.com\n→ Sign in with Google → "Get API Key" → Create\n\nNo credit card needed!') || '';
   if (API_KEY) localStorage.setItem('fitlog_gemini_key', API_KEY);
 }
 
 async function callGemini(systemPrompt, userMessage, maxTokens) {
-  const resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent`, {
+  const resp = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'x-goog-api-key': API_KEY },
     body: JSON.stringify({
@@ -624,419 +471,360 @@ async function callGemini(systemPrompt, userMessage, maxTokens) {
   return data.candidates[0].content.parts[0].text.trim();
 }
 
-// ── DATE ────────────────────────────────────────────────────────────────────
+// ── DATE / GREETING ──────────────────────────────────────────────────────────
 const now = new Date();
-document.getElementById('nav-date').textContent =
-  now.toLocaleDateString('en-IN', { weekday:'long', day:'numeric', month:'short', year:'numeric' });
+const TODAY = now.toISOString().slice(0,10);
+const hr = now.getHours();
+const greeting = hr < 12 ? 'Good morning' : hr < 17 ? 'Good afternoon' : 'Good evening';
+document.getElementById('home-greeting').textContent = greeting;
+document.getElementById('home-date').textContent = now.toLocaleDateString('en-IN', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
+document.getElementById('nav-date').textContent = now.toLocaleDateString('en-IN', { weekday:'long', day:'numeric', month:'short' });
 
 // ── NAVIGATION ───────────────────────────────────────────────────────────────
 function showSection(id, btn) {
   document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-  document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
-  document.querySelectorAll('.bn-item').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.nav-item, .bn-item').forEach(b => b.classList.remove('active'));
   document.getElementById('sec-' + id).classList.add('active');
-  // activate whichever nav triggered this (sidebar or bottom)
-  if (btn) btn.classList.add('active');
-  // sync the other nav too
-  document.querySelectorAll(`.nav-item[onclick*="'${id}'"], .bn-item[data-sec="${id}"]`).forEach(b => b.classList.add('active'));
-  if (id === 'trends') setTimeout(buildTrendCharts, 50);
-  if (id === 'dashboard') setTimeout(updateDashboard, 50);
-  if (id === 'data') setTimeout(renderDataTable, 50);
+  document.querySelectorAll(`[data-sec="${id}"]`).forEach(b => b.classList.add('active'));
+  if (id === 'trends') setTimeout(buildTrendCharts, 60);
+  if (id === 'data') setTimeout(renderDataTable, 60);
 }
 
 // ── STORAGE ──────────────────────────────────────────────────────────────────
-const TODAY = now.toISOString().slice(0,10);
-
-function getStore() {
-  try { return JSON.parse(localStorage.getItem('fitlog') || '{}'); } catch { return {}; }
-}
+function getStore() { try { return JSON.parse(localStorage.getItem('fitlog') || '{}'); } catch { return {}; } }
 function setStore(d) { localStorage.setItem('fitlog', JSON.stringify(d)); }
-
-function getTodayVitals() { return getStore()[TODAY] || {}; }
-function getAllDays() {
-  const s = getStore();
-  return Object.keys(s).sort().map(k => ({ date: k, ...s[k] }));
-}
-
-// ── CALORIES STATE ────────────────────────────────────────────────────────────
-const mealCals = { breakfast: 0, lunch: 0, dinner: 0 };
-const snackCals = {};
-let snackCount = 0;
-
-function totalCals() {
-  return Object.values(mealCals).reduce((a,b)=>a+b,0) +
-         Object.values(snackCals).reduce((a,b)=>a+b,0);
-}
-function updateTotal() {
-  document.getElementById('total-kcal').textContent = totalCals() + ' kcal';
-  // also persist
+function getTodayData() { return getStore()[TODAY] || {}; }
+function getAllDays() { const s = getStore(); return Object.keys(s).sort().map(k => ({ date:k, ...s[k] })); }
+function saveTodayField(fields) {
   const s = getStore();
   if (!s[TODAY]) s[TODAY] = {};
-  s[TODAY].calories = totalCals();
+  Object.assign(s[TODAY], fields);
   setStore(s);
 }
 
-// ── MEAL CALC ─────────────────────────────────────────────────────────────────
+// ── MEAL STATE ───────────────────────────────────────────────────────────────
+const mealCals = { breakfast:0, lunch:0, dinner:0 };
+const snackCals = {};
+let snackCount = 0;
+function totalCals() { return Object.values(mealCals).reduce((a,b)=>a+b,0) + Object.values(snackCals).reduce((a,b)=>a+b,0); }
+function updateTotalDisplay() { document.getElementById('total-kcal').textContent = totalCals() + ' kcal'; }
+
+// ── OPEN / CLOSE MEALS PANEL ─────────────────────────────────────────────────
+function openMeals() {
+  document.getElementById('meals-action').style.display = 'none';
+  document.getElementById('meals-summary').style.display = 'none';
+  document.getElementById('meals-panel').classList.add('open');
+}
+function editMeals() { openMeals(); }
+
+function saveMeals() {
+  const total = totalCals();
+  saveTodayField({ calories: total, mealDetails: buildMealDetails() });
+  document.getElementById('meals-panel').classList.remove('open');
+  renderMealsSummary();
+  checkShowDailyCards();
+}
+
+function buildMealDetails() {
+  const d = {};
+  ['breakfast','lunch','dinner'].forEach(m => {
+    const t = document.getElementById('meal-' + m)?.value?.trim();
+    if (t) d[m] = { text: t, kcal: mealCals[m] };
+  });
+  const snacks = [];
+  Object.keys(snackCals).forEach(id => {
+    const t = document.getElementById('snack-input-' + id)?.value?.trim();
+    if (t) snacks.push({ text: t, kcal: snackCals[id] });
+  });
+  if (snacks.length) d.snacks = snacks;
+  return d;
+}
+
+function renderMealsSummary() {
+  const td = getTodayData();
+  const details = td.mealDetails || {};
+  const labels = { breakfast:'🌅 Breakfast', lunch:'☀️ Lunch', dinner:'🌙 Dinner' };
+  let html = '';
+  ['breakfast','lunch','dinner'].forEach(m => {
+    if (details[m]) {
+      html += `<div class="sc-row"><span>${labels[m]}</span><span class="sc-val">${details[m].kcal} kcal</span></div>`;
+    } else {
+      html += `<div class="sc-row"><span>${labels[m]}</span><span class="sc-val" style="color:var(--text3);">not logged</span></div>`;
+    }
+  });
+  if (details.snacks?.length) {
+    details.snacks.forEach((s,i) => {
+      html += `<div class="sc-row"><span>🍵 Snack ${i+1}</span><span class="sc-val">${s.kcal} kcal</span></div>`;
+    });
+  }
+  html += `<div class="sc-row" style="font-weight:600;"><span>Total</span><span class="sc-val" style="color:var(--accent);">${td.calories || 0} kcal</span></div>`;
+  document.getElementById('meals-summary-body').innerHTML = html;
+  document.getElementById('meals-action').style.display = 'none';
+  document.getElementById('meals-summary').style.display = 'block';
+}
+
+// ── CALC MEAL ─────────────────────────────────────────────────────────────────
 async function calcMeal(slot, snackId) {
   const inputId = snackId ? 'snack-input-' + snackId : 'meal-' + slot;
   const resultId = snackId ? 'snack-result-' + snackId : 'result-' + slot;
-  const btnId = snackId ? 'snack-btn-' + snackId : null;
   const textarea = document.getElementById(inputId);
   const resultEl = document.getElementById(resultId);
   const text = textarea.value.trim();
   if (!text) return;
-
-  const btn = btnId ? document.getElementById(btnId) :
-    textarea.parentElement.querySelector('.btn-calc');
-  btn.disabled = true;
-  btn.textContent = 'Calculating…';
+  const btn = snackId ? document.getElementById('snack-btn-' + snackId) : textarea.closest('.meal-slot, .meal-slot-header')?.querySelector('.calc-btn') || textarea.parentElement.querySelector('.calc-btn');
+  btn.disabled = true; btn.textContent = '…';
   resultEl.classList.remove('show');
-
   try {
-    const systemPrompt = `You are a nutrition assistant. When given a description of Indian or international food items, estimate total calories.
-Reply ONLY with valid JSON in this exact format (no markdown, no code blocks, no explanation whatsoever):
-{"items":[{"name":"item name","qty":"portion","kcal":number}],"total":number,"note":"brief tip if any"}
-Use standard Indian portion sizes. Be realistic and accurate.`;
-    const raw = await callGemini(systemPrompt, text, 400);
-    const clean = raw.replace(/```json|```/g, '').trim();
-    const parsed = JSON.parse(clean);
-
-    // render
-    let html = parsed.items.map(it =>
-      `<span style="color:var(--text2)">${it.name} (${it.qty})</span> — <strong>${it.kcal} kcal</strong>`
-    ).join(' &nbsp;·&nbsp; ');
+    const sys = `You are a nutrition assistant. Estimate calories for Indian/international food. Reply ONLY valid JSON, no markdown:\n{"items":[{"name":"item","qty":"portion","kcal":number}],"total":number,"note":"brief tip"}`;
+    const raw = await callGemini(sys, text, 400);
+    const parsed = JSON.parse(raw.replace(/```json|```/g,'').trim());
+    let html = parsed.items.map(it => `<span style="color:var(--text2)">${it.name} (${it.qty})</span> — <strong>${it.kcal} kcal</strong>`).join(' · ');
     html += `<br/><strong style="color:var(--accent)">Total: ${parsed.total} kcal</strong>`;
-    if (parsed.note) html += ` &nbsp;<span style="color:var(--text3)">· ${parsed.note}</span>`;
-    resultEl.innerHTML = html;
-    resultEl.classList.add('show');
-
-    if (snackId) snackCals[snackId] = parsed.total;
-    else mealCals[slot] = parsed.total;
-    updateTotal();
+    if (parsed.note) html += ` <span style="color:var(--text3)">· ${parsed.note}</span>`;
+    resultEl.innerHTML = html; resultEl.classList.add('show');
+    if (snackId) snackCals[snackId] = parsed.total; else mealCals[slot] = parsed.total;
+    updateTotalDisplay();
   } catch(e) {
-    resultEl.innerHTML = '<span style="color:#c0392b">Could not calculate — please check your connection and try again.</span>';
+    resultEl.innerHTML = '<span style="color:#c0392b;">Could not calculate — check connection or API key.</span>';
     resultEl.classList.add('show');
   }
-
-  btn.disabled = false;
-  btn.textContent = 'Calculate ↗';
+  btn.disabled = false; btn.textContent = 'Calculate ↗';
 }
 
 // ── SNACKS ────────────────────────────────────────────────────────────────────
 function addSnack() {
   snackCount++;
   const id = snackCount;
-  const container = document.getElementById('snacks-container');
   const div = document.createElement('div');
-  div.className = 'meal-slot';
-  div.id = 'snack-slot-' + id;
+  div.className = 'meal-slot'; div.id = 'snack-slot-' + id;
   div.innerHTML = `
-    <div class="meal-slot-header">
-      <div class="meal-slot-label" style="color:var(--text3);font-size:13px;">Snack ${id}</div>
-      <button class="snack-remove" onclick="removeSnack(${id})" title="Remove">✕</button>
+    <div class="meal-label" style="justify-content:space-between;">
+      <span style="font-size:13px;color:var(--text3);">Snack ${id}</span>
+      <button class="snack-remove" onclick="removeSnack(${id})">✕</button>
     </div>
-    <div class="meal-input-row">
-      <textarea class="meal-textarea" id="snack-input-${id}" placeholder="e.g. one cup chai, 2 biscuits, handful of roasted chana"></textarea>
-      <button class="btn-calc" id="snack-btn-${id}" onclick="calcMeal(null, ${id})">Calculate ↗</button>
+    <div class="meal-row">
+      <textarea class="meal-ta" id="snack-input-${id}" placeholder="e.g. chai, biscuits, fruit, roasted chana"></textarea>
+      <button class="calc-btn" id="snack-btn-${id}" onclick="calcMeal(null,${id})">Calculate ↗</button>
     </div>
-    <div class="meal-result" id="snack-result-${id}"></div>
-  `;
-  container.appendChild(div);
+    <div class="meal-result" id="snack-result-${id}"></div>`;
+  document.getElementById('snacks-container').appendChild(div);
 }
-function removeSnack(id) {
-  document.getElementById('snack-slot-' + id)?.remove();
-  delete snackCals[id];
-  updateTotal();
-}
+function removeSnack(id) { document.getElementById('snack-slot-' + id)?.remove(); delete snackCals[id]; updateTotalDisplay(); }
 
-// ── VITALS SAVE ───────────────────────────────────────────────────────────────
+// ── VITALS ────────────────────────────────────────────────────────────────────
+function openVitals() {
+  document.getElementById('vitals-action').style.display = 'none';
+  document.getElementById('vitals-summary').style.display = 'none';
+  document.getElementById('vitals-panel').classList.add('open');
+}
+function editVitals() { openVitals(); }
+
 function saveVitals() {
-  const s = getStore();
-  if (!s[TODAY]) s[TODAY] = {};
-  const fields = ['steps','dist','pace','weight','bp-s','bp-d','bs-f','bs-pp'];
-  fields.forEach(f => {
-    const el = document.getElementById('v-' + f);
-    if (el && el.value) s[TODAY][f.replace('-','_')] = parseFloat(el.value);
+  const fields = {};
+  const map = { 'v-steps':'steps','v-dist':'dist','v-pace':'pace','v-weight':'weight','v-bps':'bp_s','v-bpd':'bp_d','v-bsf':'bs_f','v-bspp':'bs_pp' };
+  Object.entries(map).forEach(([elId, key]) => {
+    const val = document.getElementById(elId)?.value;
+    if (val) fields[key] = parseFloat(val);
   });
-  setStore(s);
-  const msg = document.getElementById('save-msg');
-  msg.style.opacity = '1';
-  setTimeout(() => msg.style.opacity = '0', 2500);
-  updateDashboard();
+  saveTodayField(fields);
+  document.getElementById('vitals-panel').classList.remove('open');
+  renderVitalsSummary();
+  checkShowDailyCards();
 }
 
-// ── DASHBOARD ─────────────────────────────────────────────────────────────────
-let dashChart;
-function updateDashboard() {
-  const v = getTodayVitals();
-  const cal = v.calories || 0;
-  const steps = v.steps || 0;
-  const dist = v.dist || 0;
+function renderVitalsSummary() {
+  const td = getTodayData();
+  const rows = [
+    ['Steps', td.steps ? td.steps.toLocaleString() : null],
+    ['Distance', td.dist ? td.dist + ' km' : null],
+    ['Pace', td.pace ? td.pace + ' min/km' : null],
+    ['Weight', td.weight ? td.weight + ' kg' : null],
+    ['Blood pressure', (td.bp_s && td.bp_d) ? td.bp_s + '/' + td.bp_d + ' mmHg' : null],
+    ['Blood sugar fasting', td.bs_f ? td.bs_f + ' mg/dL' : null],
+    ['Blood sugar PP', td.bs_pp ? td.bs_pp + ' mg/dL' : null],
+  ];
+  const anyLogged = rows.some(r => r[1]);
+  if (!anyLogged) {
+    document.getElementById('vitals-action').style.display = 'flex';
+    document.getElementById('vitals-summary').style.display = 'none';
+    return;
+  }
+  let html = rows.map(([label, val]) =>
+    `<div class="sc-row"><span>${label}</span><span class="sc-val" style="${!val?'color:var(--text3)':''}">${val || 'not logged'}</span></div>`
+  ).join('');
+  document.getElementById('vitals-summary-body').innerHTML = html;
+  document.getElementById('vitals-action').style.display = 'none';
+  document.getElementById('vitals-summary').style.display = 'block';
+}
 
-  document.getElementById('dash-cal').textContent = cal ? cal + ' kcal' : '—';
-  document.getElementById('dash-steps').textContent = steps ? steps.toLocaleString() : '—';
-  document.getElementById('dash-weight').textContent = v.weight ? v.weight + ' kg' : '—';
+// ── DAILY CARDS ───────────────────────────────────────────────────────────────
+function checkShowDailyCards() {
+  const td = getTodayData();
+  const hasMeals = td.calories !== undefined;
+  const hasVitals = td.steps || td.weight || td.bp_s;
+  if (hasMeals || hasVitals) {
+    renderDailyCards();
+    document.getElementById('daily-cards').style.display = 'block';
+  }
+}
 
-  const bps = v.bp_s, bpd = v.bp_d;
-  if (bps && bpd) {
-    document.getElementById('dash-bp').textContent = bps + '/' + bpd;
-    const status = bps >= 140 ? 'High' : bps <= 120 ? 'Normal' : 'Slightly high';
-    const dot = bps >= 140 ? 'dot-bad' : bps <= 120 ? 'dot-good' : 'dot-warn';
-    document.getElementById('dash-bp-sub').innerHTML = `<span class="metric-dot ${dot}"></span>${status}`;
+function renderDailyCards() {
+  const td = getTodayData();
+  const cal = td.calories || 0;
+  const steps = td.steps || 0;
+  const dist = td.dist || 0;
+
+  document.getElementById('dc-cal').textContent = cal ? cal + ' kcal' : '—';
+  document.getElementById('dc-steps').textContent = steps ? steps.toLocaleString() : '—';
+  document.getElementById('dc-weight').textContent = td.weight ? td.weight + ' kg' : '—';
+  document.getElementById('dc-weight-sub').textContent = '';
+
+  if (td.bp_s && td.bp_d) {
+    document.getElementById('dc-bp').textContent = td.bp_s + '/' + td.bp_d;
+    document.getElementById('dc-bp-sub').textContent = td.bp_s >= 140 ? '⚠️ High' : td.bp_s <= 120 ? '✓ Normal' : 'Slightly high';
+  } else {
+    document.getElementById('dc-bp').textContent = '—';
+    document.getElementById('dc-bp-sub').textContent = 'Data not logged';
   }
 
-  const calPct = Math.min(100, Math.round(cal/20));
-  const stepsPct = Math.min(100, Math.round(steps/100));
-  const distPct = Math.min(100, Math.round(dist/8*100));
-  document.getElementById('prog-cal').style.width = calPct + '%';
-  document.getElementById('prog-steps').style.width = stepsPct + '%';
-  document.getElementById('prog-dist').style.width = distPct + '%';
+  document.getElementById('prog-cal').style.width = Math.min(100, cal/20) + '%';
+  document.getElementById('prog-steps').style.width = Math.min(100, steps/100) + '%';
+  document.getElementById('prog-dist').style.width = Math.min(100, dist/8*100) + '%';
   document.getElementById('prog-cal-lbl').textContent = cal + ' / 2,000 kcal';
   document.getElementById('prog-steps-lbl').textContent = steps.toLocaleString() + ' / 10,000';
   document.getElementById('prog-dist-lbl').textContent = dist.toFixed(1) + ' / 8 km';
-
-  // 7-day combo chart
-  const days = getAllDays().slice(-7);
-  const labels = days.map(d => {
-    const dt = new Date(d.date);
-    return dt.toLocaleDateString('en-IN', { weekday:'short' });
-  });
-  const calArr = days.map(d => d.calories || 0);
-  const stepsArr = days.map(d => (d.steps || 0) / 10); // scale to fit same chart
-
-  if (dashChart) dashChart.destroy();
-  dashChart = new Chart(document.getElementById('dashChart'), {
-    data: {
-      labels,
-      datasets: [
-        {
-          type: 'bar', label: 'Calories', data: calArr,
-          backgroundColor: 'rgba(200,84,26,.25)', borderColor: '#c8541a',
-          borderWidth: 1.5, borderRadius: 4, yAxisID: 'y'
-        },
-        {
-          type: 'line', label: 'Steps (÷10)', data: stepsArr,
-          borderColor: '#2d6a4f', backgroundColor: 'rgba(45,106,79,.08)',
-          tension: .35, pointRadius: 4, pointBackgroundColor: '#2d6a4f',
-          borderWidth: 2, fill: true, yAxisID: 'y'
-        }
-      ]
-    },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      plugins: { legend: { display: false } },
-      scales: {
-        y: { ticks: { font: { size: 11 } }, grid: { color: 'rgba(0,0,0,.06)' } },
-        x: { ticks: { font: { size: 11 } }, grid: { display: false } }
-      }
-    }
-  });
 }
 
 // ── TREND CHARTS ──────────────────────────────────────────────────────────────
-let trendsBuilt = false;
-let wtC, stC, bsC, bpC;
-
+let wtC, stC, bsC, bpC, dashC;
 function buildTrendCharts() {
   const days = getAllDays();
-
-  // Seed demo data if empty (first load)
-  if (days.length < 3) {
-    seedDemoData();
-    return buildTrendCharts();
+  if (days.length === 0) {
+    document.getElementById('trends-empty').style.display = 'flex';
+    document.getElementById('trends-charts').style.display = 'none';
+    return;
   }
+  document.getElementById('trends-empty').style.display = 'none';
+  document.getElementById('trends-charts').style.display = 'block';
 
-  const labels = days.map(d => {
-    const dt = new Date(d.date);
-    return dt.toLocaleDateString('en-IN', { day:'numeric', month:'short' });
+  const labels = days.map(d => new Date(d.date).toLocaleDateString('en-IN', { day:'numeric', month:'short' }));
+  const mkLine = (canvas, datasets, yOpts={}) => {
+    const existing = Chart.getChart(canvas);
+    if (existing) existing.destroy();
+    return new Chart(canvas, {
+      type:'line', data:{ labels, datasets },
+      options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{display:false} }, scales:{ y:{ ticks:{font:{size:11}}, grid:{color:'rgba(0,0,0,.05)'}, ...yOpts }, x:{ ticks:{font:{size:11}, autoSkip:true, maxTicksLimit:10}, grid:{display:false} } } }
+    });
+  };
+
+  // Dash = bar+line
+  const dashEl = document.getElementById('dashChart');
+  const dExist = Chart.getChart(dashEl); if (dExist) dExist.destroy();
+  dashC = new Chart(dashEl, {
+    data:{ labels, datasets:[
+      { type:'bar', data:days.map(d=>d.calories||null), backgroundColor:'rgba(200,84,26,.25)', borderColor:'var(--accent)', borderWidth:1.5, borderRadius:4, yAxisID:'y' },
+      { type:'line', data:days.map(d=>d.steps?d.steps/10:null), borderColor:'var(--accent2)', backgroundColor:'rgba(45,106,79,.08)', tension:.3, pointRadius:3, fill:true, yAxisID:'y', spanGaps:true }
+    ]},
+    options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{display:false} }, scales:{ y:{ ticks:{font:{size:11}}, grid:{color:'rgba(0,0,0,.05)'} }, x:{ ticks:{font:{size:11}, autoSkip:true, maxTicksLimit:10}, grid:{display:false} } } }
   });
 
-  const cfg = (type, datasets, yExtra) => ({
-    type, data: { labels, datasets },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      plugins: { legend: { display: false } },
-      scales: {
-        y: { ticks: { font: { size: 11 } }, grid: { color: 'rgba(0,0,0,.06)' }, ...yExtra },
-        x: { ticks: { font: { size: 11 }, autoSkip: true, maxTicksLimit: 10 }, grid: { display: false } }
-      }
-    }
-  });
-
-  if (wtC) wtC.destroy();
-  wtC = new Chart(document.getElementById('wtChart'), cfg('line',
-    [{ data: days.map(d=>d.weight||null), borderColor:'#c8541a', backgroundColor:'rgba(200,84,26,.08)', tension:.3, pointRadius:4, pointBackgroundColor:'#c8541a', fill:true, spanGaps:true }]
-  ));
-
-  if (stC) stC.destroy();
-  stC = new Chart(document.getElementById('stChart'), cfg('bar',
-    [{ data: days.map(d=>d.steps||null), backgroundColor:'rgba(45,106,79,.3)', borderColor:'#2d6a4f', borderWidth:1.5, borderRadius:4 }]
-  ));
-
-  if (bsC) bsC.destroy();
-  bsC = new Chart(document.getElementById('bsChart'), cfg('line', [
-    { data: days.map(d=>d.bs_f||null), borderColor:'#c8541a', tension:.3, pointRadius:3, pointBackgroundColor:'#c8541a', spanGaps:true },
-    { data: days.map(d=>d.bs_pp||null), borderColor:'#1a5276', tension:.3, pointRadius:3, pointBackgroundColor:'#1a5276', spanGaps:true },
-    { data: days.map(()=>100), borderColor:'rgba(192,57,43,.25)', borderDash:[5,4], pointRadius:0, borderWidth:1.5 },
-    { data: days.map(()=>140), borderColor:'rgba(26,82,118,.25)', borderDash:[5,4], pointRadius:0, borderWidth:1.5 }
-  ]));
-
-  if (bpC) bpC.destroy();
-  bpC = new Chart(document.getElementById('bpChart'), cfg('line', [
-    { data: days.map(d=>d.bp_s||null), borderColor:'#c0392b', tension:.3, pointRadius:3, pointBackgroundColor:'#c0392b', spanGaps:true },
-    { data: days.map(d=>d.bp_d||null), borderColor:'#1a5276', tension:.3, pointRadius:3, pointBackgroundColor:'#1a5276', spanGaps:true }
-  ]));
-}
-
-function seedDemoData() {
-  const s = getStore();
-  const base = new Date(); base.setDate(base.getDate() - 13);
-  for (let i = 0; i < 14; i++) {
-    const d = new Date(base); d.setDate(d.getDate() + i);
-    const key = d.toISOString().slice(0,10);
-    if (!s[key]) s[key] = {
-      calories: 1700 + Math.round(Math.random()*500),
-      steps: 5000 + Math.round(Math.random()*5000),
-      dist: +(3 + Math.random()*5).toFixed(1),
-      weight: +(78 - i*0.08 + (Math.random()-.5)*.3).toFixed(1),
-      bp_s: 120 + Math.round(Math.random()*14),
-      bp_d: 78 + Math.round(Math.random()*10),
-      bs_f: 90 + Math.round(Math.random()*18),
-      bs_pp: 130 + Math.round(Math.random()*30)
-    };
-  }
-  setStore(s);
+  mkLine('wtChart', [{ data:days.map(d=>d.weight||null), borderColor:'var(--accent)', backgroundColor:'rgba(200,84,26,.08)', tension:.3, pointRadius:4, fill:true, spanGaps:true }]);
+  mkLine('bsChart', [
+    { data:days.map(d=>d.bs_f||null), borderColor:'var(--accent)', tension:.3, pointRadius:3, spanGaps:true },
+    { data:days.map(d=>d.bs_pp||null), borderColor:'var(--accent3)', tension:.3, pointRadius:3, spanGaps:true },
+    { data:days.map(()=>100), borderColor:'rgba(200,84,26,.2)', borderDash:[5,4], pointRadius:0, borderWidth:1.5 },
+    { data:days.map(()=>140), borderColor:'rgba(26,82,118,.2)', borderDash:[5,4], pointRadius:0, borderWidth:1.5 }
+  ]);
+  mkLine('bpChart', [
+    { data:days.map(d=>d.bp_s||null), borderColor:'#c0392b', tension:.3, pointRadius:3, spanGaps:true },
+    { data:days.map(d=>d.bp_d||null), borderColor:'var(--accent3)', tension:.3, pointRadius:3, spanGaps:true }
+  ]);
 }
 
 // ── AI SUGGESTIONS ────────────────────────────────────────────────────────────
 async function generateSuggestions() {
   const days = getAllDays().slice(-14);
-  if (days.length === 0) {
-    alert('Please log some vitals first.');
-    return;
-  }
+  if (!days.length) { alert('Please log some data first.'); return; }
   document.getElementById('ai-loading').classList.add('show');
   document.getElementById('sug-card').style.opacity = '.4';
-
-  const summary = days.map(d =>
-    `${d.date}: calories=${d.calories||'?'}, steps=${d.steps||'?'}, weight=${d.weight||'?'}kg, BP=${d.bp_s||'?'}/${d.bp_d||'?'}, fastingBS=${d.bs_f||'?'}, ppBS=${d.bs_pp||'?'}`
-  ).join('\n');
-
+  const summary = days.map(d => `${d.date}: cal=${d.calories||'?'}, steps=${d.steps||'?'}, weight=${d.weight||'?'}kg, BP=${d.bp_s||'?'}/${d.bp_d||'?'}, fastBS=${d.bs_f||'?'}, ppBS=${d.bs_pp||'?'}`).join('\n');
   try {
-    const systemPrompt = `You are a health coach analysing a user's daily health log. Provide 4-5 specific, actionable suggestions.
-Reply ONLY with valid JSON, no markdown, no code blocks:
-{"suggestions":[{"title":"short title","body":"2-3 sentence specific advice","type":"diet|exercise|health","icon":"single emoji"}]}
-Be specific, reference actual numbers from their data. Focus on Indian lifestyle where relevant.`;
-    const raw = await callGemini(systemPrompt, `Here is my last 14 days of health data:\n${summary}\n\nPlease give me specific suggestions.`, 1000);
-    const clean = raw.replace(/```json|```/g, '').trim();
-    const parsed = JSON.parse(clean);
-    renderSuggestions(parsed.suggestions);
+    const sys = `You are a health coach. Analyse the user's daily health log and give 4-5 specific, actionable suggestions. Reply ONLY valid JSON, no markdown:\n{"suggestions":[{"title":"short title","body":"2-3 sentences of specific advice","type":"diet|exercise|health","icon":"emoji"}]}\nFocus on Indian lifestyle. Reference actual numbers from the data.`;
+    const raw = await callGemini(sys, `My last 14 days:\n${summary}\n\nGive me specific suggestions.`, 900);
+    const parsed = JSON.parse(raw.replace(/```json|```/g,'').trim());
+    const typeMap = {diet:'tag-diet',exercise:'tag-exercise',health:'tag-health'};
+    const iconMap = {diet:'icon-green',exercise:'icon-blue',health:'icon-orange'};
+    document.getElementById('sug-list').innerHTML = parsed.suggestions.map(s => `
+      <div class="sug-item">
+        <div class="sug-icon ${iconMap[s.type]||'icon-orange'}">${s.icon}</div>
+        <div><div class="sug-title">${s.title}</div><div class="sug-body">${s.body}</div>
+        <span class="sug-tag ${typeMap[s.type]||'tag-health'}">${s.type}</span></div>
+      </div>`).join('');
   } catch(e) {
-    document.getElementById('sug-list').innerHTML = `<div class="sug-item"><div class="sug-icon icon-orange">⚠️</div><div><div class="sug-title">Could not generate suggestions</div><div class="sug-body">Please check your internet connection and try again.</div></div></div>`;
+    document.getElementById('sug-list').innerHTML = `<div class="sug-item"><div class="sug-icon icon-orange">⚠️</div><div><div class="sug-title">Could not generate</div><div class="sug-body">Check your internet and API key, then try again.</div></div></div>`;
   }
-
   document.getElementById('ai-loading').classList.remove('show');
   document.getElementById('sug-card').style.opacity = '1';
 }
 
-function renderSuggestions(sugs) {
-  const typeMap = { diet:'tag-diet', exercise:'tag-exercise', health:'tag-health' };
-  const iconMap = { diet:'icon-green', exercise:'icon-blue', health:'icon-orange' };
-  document.getElementById('sug-list').innerHTML = sugs.map(s => `
-    <div class="sug-item">
-      <div class="sug-icon ${iconMap[s.type]||'icon-orange'}">${s.icon}</div>
-      <div>
-        <div class="sug-title">${s.title}</div>
-        <div class="sug-body">${s.body}</div>
-        <span class="sug-tag ${typeMap[s.type]||'tag-health'}">${s.type}</span>
-      </div>
-    </div>
-  `).join('');
-}
-
 // ── DATA TABLE ────────────────────────────────────────────────────────────────
 function renderDataTable() {
-  const days = getAllDays().reverse(); // newest first
+  const days = getAllDays().reverse();
   document.getElementById('data-count').textContent = days.length;
   const tbody = document.getElementById('data-tbody');
-
-  if (days.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="10" style="padding:20px;text-align:center;color:var(--text3);">No data logged yet. Start by logging your meals and vitals!</td></tr>`;
+  if (!days.length) {
+    tbody.innerHTML = `<tr><td colspan="8" style="padding:24px;text-align:center;color:var(--text3);">No data logged yet. Start by logging your meals and vitals on the Home tab.</td></tr>`;
     return;
   }
-
-  const bpColor = (s) => {
-    if (!s) return 'var(--text)';
-    return s >= 140 ? '#c0392b' : s >= 130 ? '#e8a020' : 'var(--accent2)';
-  };
-  const bsColor = (v, limit) => {
-    if (!v) return 'var(--text)';
-    return v > limit ? '#c0392b' : v > limit * 0.9 ? '#e8a020' : 'var(--accent2)';
-  };
-
-  tbody.innerHTML = days.map((d, i) => {
-    const bg = i % 2 === 0 ? 'var(--surface)' : 'var(--surface2)';
-    const fmt = (v) => v !== undefined ? v : '—';
-    const date = new Date(d.date).toLocaleDateString('en-IN', { day:'numeric', month:'short', year:'numeric' });
+  const fmt = v => v !== undefined ? v : '—';
+  tbody.innerHTML = days.map((d,i) => {
+    const bg = i%2===0 ? 'var(--surface)' : 'var(--surface2)';
+    const date = new Date(d.date).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'});
+    const bpCol = d.bp_s >= 140 ? '#c0392b' : d.bp_s >= 130 ? '#e8a020' : 'var(--accent2)';
+    const bsfCol = d.bs_f > 100 ? '#c0392b' : d.bs_f > 90 ? '#e8a020' : 'var(--accent2)';
+    const bsppCol = d.bs_pp > 140 ? '#c0392b' : d.bs_pp > 120 ? '#e8a020' : 'var(--accent2)';
     return `<tr style="background:${bg};border-bottom:1px solid var(--border);">
-      <td style="padding:10px 8px;font-weight:500;white-space:nowrap;">${date}</td>
-      <td style="padding:10px 8px;">${d.calories ? d.calories + ' kcal' : '—'}</td>
-      <td style="padding:10px 8px;">${d.steps ? d.steps.toLocaleString() : '—'}</td>
-      <td style="padding:10px 8px;">${d.dist ? d.dist + ' km' : '—'}</td>
-      <td style="padding:10px 8px;">${d.pace ? d.pace + ' min/km' : '—'}</td>
-      <td style="padding:10px 8px;">${d.weight ? d.weight + ' kg' : '—'}</td>
-      <td style="padding:10px 8px;color:${bpColor(d.bp_s)};font-weight:500;">${fmt(d.bp_s)}</td>
-      <td style="padding:10px 8px;color:${bpColor(d.bp_d)};font-weight:500;">${fmt(d.bp_d)}</td>
-      <td style="padding:10px 8px;color:${bsColor(d.bs_f, 100)};font-weight:500;">${fmt(d.bs_f)}</td>
-      <td style="padding:10px 8px;color:${bsColor(d.bs_pp, 140)};font-weight:500;">${fmt(d.bs_pp)}</td>
+      <td style="padding:9px 8px;font-weight:500;white-space:nowrap;">${date}</td>
+      <td style="padding:9px 8px;">${d.calories ? d.calories+' kcal' : '—'}</td>
+      <td style="padding:9px 8px;">${d.steps ? d.steps.toLocaleString() : '—'}</td>
+      <td style="padding:9px 8px;">${d.dist ? d.dist+' km' : '—'}</td>
+      <td style="padding:9px 8px;">${d.weight ? d.weight+' kg' : '—'}</td>
+      <td style="padding:9px 8px;color:${d.bp_s?bpCol:'var(--text)'};font-weight:500;">${(d.bp_s&&d.bp_d)?d.bp_s+'/'+d.bp_d:'—'}</td>
+      <td style="padding:9px 8px;color:${d.bs_f?bsfCol:'var(--text)'};font-weight:500;">${d.bs_f?d.bs_f+' mg/dL':'—'}</td>
+      <td style="padding:9px 8px;color:${d.bs_pp?bsppCol:'var(--text)'};font-weight:500;">${d.bs_pp?d.bs_pp+' mg/dL':'—'}</td>
     </tr>`;
   }).join('');
 }
 
-// ── EXPORT CSV ────────────────────────────────────────────────────────────────
+// ── EXPORT ────────────────────────────────────────────────────────────────────
 function exportCSV() {
   const days = getAllDays();
-  if (days.length === 0) { alert('No data to export yet!'); return; }
-
-  const headers = ['Date','Calories (kcal)','Steps','Distance (km)','Pace (min/km)','Weight (kg)','BP Systolic','BP Diastolic','Blood Sugar Fasting','Blood Sugar PP'];
-  const rows = days.map(d => [
-    d.date,
-    d.calories || '',
-    d.steps || '',
-    d.dist || '',
-    d.pace || '',
-    d.weight || '',
-    d.bp_s || '',
-    d.bp_d || '',
-    d.bs_f || '',
-    d.bs_pp || ''
-  ]);
-
-  const csv = [headers, ...rows].map(r => r.join(',')).join('\n');
-  const blob = new Blob([csv], { type: 'text/csv' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = 'fitlog-export-' + new Date().toISOString().slice(0,10) + '.csv';
+  if (!days.length) { alert('No data to export yet!'); return; }
+  const headers = ['Date','Calories (kcal)','Steps','Distance (km)','Pace (min/km)','Weight (kg)','BP Systolic','BP Diastolic','Blood Sugar Fasting (mg/dL)','Blood Sugar PP (mg/dL)'];
+  const rows = days.map(d => [d.date, d.calories||'', d.steps||'', d.dist||'', d.pace||'', d.weight||'', d.bp_s||'', d.bp_d||'', d.bs_f||'', d.bs_pp||'']);
+  const csv = [headers,...rows].map(r=>r.join(',')).join('\n');
+  const a = Object.assign(document.createElement('a'), { href: URL.createObjectURL(new Blob([csv],{type:'text/csv'})), download: 'fitlog-'+TODAY+'.csv' });
   a.click();
-  URL.revokeObjectURL(url);
 }
-
-// ── EXPORT JSON ───────────────────────────────────────────────────────────────
 function exportJSON() {
   const data = getStore();
-  if (Object.keys(data).length === 0) { alert('No data to export yet!'); return; }
-  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = 'fitlog-backup-' + new Date().toISOString().slice(0,10) + '.json';
+  if (!Object.keys(data).length) { alert('No data to export yet!'); return; }
+  const a = Object.assign(document.createElement('a'), { href: URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],{type:'application/json'})), download: 'fitlog-backup-'+TODAY+'.json' });
   a.click();
-  URL.revokeObjectURL(url);
+}
+function clearAll() {
+  if (confirm('This will permanently delete ALL your FitLog data. Are you sure?')) {
+    localStorage.removeItem('fitlog');
+    location.reload();
+  }
 }
 
 // ── INIT ──────────────────────────────────────────────────────────────────────
-updateDashboard();
+// Restore today's state if already logged
+const td = getTodayData();
+if (td.calories !== undefined) renderMealsSummary();
+if (td.steps || td.weight || td.bp_s) renderVitalsSummary();
+checkShowDailyCards();
 </script>
 </body>
 </html>
