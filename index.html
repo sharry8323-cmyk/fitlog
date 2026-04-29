@@ -231,11 +231,33 @@
   /* RESPONSIVE */
   @media (max-width: 700px) {
     .sidebar { display: none; }
-    .main { margin-left: 0; padding: 20px; }
+    .main { margin-left: 0; padding: 16px 16px 90px; }
     .metrics-row { grid-template-columns: 1fr 1fr; }
     .vitals-grid { grid-template-columns: 1fr; }
     .meal-input-row { flex-direction: column; }
     .btn-calc { width: 100%; }
+  }
+
+  /* BOTTOM NAV (mobile) */
+  .bottom-nav {
+    display: none;
+    position: fixed; bottom: 0; left: 0; right: 0;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    padding: 8px 0 max(8px, env(safe-area-inset-bottom));
+    z-index: 200;
+    justify-content: space-around;
+  }
+  .bn-item {
+    display: flex; flex-direction: column; align-items: center; gap: 3px;
+    flex: 1; border: none; background: none; cursor: pointer;
+    color: var(--text3); font-family: var(--font-body); font-size: 10px;
+    padding: 4px 2px; transition: color .15s;
+  }
+  .bn-item.active { color: var(--accent); }
+  .bn-icon { font-size: 20px; line-height: 1; }
+  @media (max-width: 700px) {
+    .bottom-nav { display: flex; }
   }
 
   /* ANIMATIONS */
@@ -267,6 +289,9 @@
     </button>
     <button class="nav-item" onclick="showSection('suggestions', this)">
       <span class="nav-icon">✨</span> AI suggestions
+    </button>
+    <button class="nav-item" onclick="showSection('data', this)">
+      <span class="nav-icon">📋</span> Data & export
     </button>
   </div>
   <div class="nav-date" id="nav-date"></div>
@@ -516,8 +541,67 @@
     </div>
   </div>
 
+  <!-- DATA & EXPORT -->
+  <div id="sec-data" class="section">
+    <div class="page-header">
+      <div class="page-title">Data & export</div>
+      <div class="page-sub">View and download all your logged health data</div>
+    </div>
+
+    <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px;">
+      <button class="save-btn" onclick="exportCSV()" style="margin-top:0;">⬇ Export to Excel / CSV</button>
+      <button class="save-btn" onclick="exportJSON()" style="margin-top:0;background:var(--accent2);">⬇ Export as JSON backup</button>
+      <button class="save-btn" onclick="if(confirm('This will delete ALL your data. Are you sure?')) { localStorage.removeItem(\'fitlog\'); location.reload(); }" style="margin-top:0;background:#c0392b;">🗑 Clear all data</button>
+    </div>
+
+    <div class="card">
+      <div class="card-title">All logged entries — <span id="data-count">0</span> days</div>
+      <div style="overflow-x:auto;">
+        <table id="data-table" style="width:100%;border-collapse:collapse;font-size:13px;">
+          <thead>
+            <tr style="border-bottom:2px solid var(--border2);text-align:left;">
+              <th style="padding:10px 8px;color:var(--text3);font-weight:500;white-space:nowrap;">Date</th>
+              <th style="padding:10px 8px;color:var(--text3);font-weight:500;white-space:nowrap;">Calories</th>
+              <th style="padding:10px 8px;color:var(--text3);font-weight:500;white-space:nowrap;">Steps</th>
+              <th style="padding:10px 8px;color:var(--text3);font-weight:500;white-space:nowrap;">Dist (km)</th>
+              <th style="padding:10px 8px;color:var(--text3);font-weight:500;white-space:nowrap;">Pace</th>
+              <th style="padding:10px 8px;color:var(--text3);font-weight:500;white-space:nowrap;">Weight (kg)</th>
+              <th style="padding:10px 8px;color:var(--text3);font-weight:500;white-space:nowrap;">BP Sys</th>
+              <th style="padding:10px 8px;color:var(--text3);font-weight:500;white-space:nowrap;">BP Dia</th>
+              <th style="padding:10px 8px;color:var(--text3);font-weight:500;white-space:nowrap;">BS Fasting</th>
+              <th style="padding:10px 8px;color:var(--text3);font-weight:500;white-space:nowrap;">BS PP</th>
+            </tr>
+          </thead>
+          <tbody id="data-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
 </main>
 </div>
+
+<!-- BOTTOM NAV (mobile only) -->
+<nav class="bottom-nav" id="bottom-nav">
+  <button class="bn-item active" onclick="showSection('dashboard', this)" data-sec="dashboard">
+    <span class="bn-icon">📊</span>Home
+  </button>
+  <button class="bn-item" onclick="showSection('meals', this)" data-sec="meals">
+    <span class="bn-icon">🍽️</span>Meals
+  </button>
+  <button class="bn-item" onclick="showSection('vitals', this)" data-sec="vitals">
+    <span class="bn-icon">💊</span>Vitals
+  </button>
+  <button class="bn-item" onclick="showSection('trends', this)" data-sec="trends">
+    <span class="bn-icon">📈</span>Trends
+  </button>
+  <button class="bn-item" onclick="showSection('suggestions', this)" data-sec="suggestions">
+    <span class="bn-icon">✨</span>AI
+  </button>
+  <button class="bn-item" onclick="showSection('data', this)" data-sec="data">
+    <span class="bn-icon">📋</span>Export
+  </button>
+</nav>
 
 <script>
 let API_KEY = localStorage.getItem('fitlog_gemini_key') || '';
@@ -549,10 +633,15 @@ document.getElementById('nav-date').textContent =
 function showSection(id, btn) {
   document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.bn-item').forEach(b => b.classList.remove('active'));
   document.getElementById('sec-' + id).classList.add('active');
-  btn.classList.add('active');
+  // activate whichever nav triggered this (sidebar or bottom)
+  if (btn) btn.classList.add('active');
+  // sync the other nav too
+  document.querySelectorAll(`.nav-item[onclick*="'${id}'"], .bn-item[data-sec="${id}"]`).forEach(b => b.classList.add('active'));
   if (id === 'trends') setTimeout(buildTrendCharts, 50);
   if (id === 'dashboard') setTimeout(updateDashboard, 50);
+  if (id === 'data') setTimeout(renderDataTable, 50);
 }
 
 // ── STORAGE ──────────────────────────────────────────────────────────────────
@@ -863,6 +952,87 @@ function renderSuggestions(sugs) {
       </div>
     </div>
   `).join('');
+}
+
+// ── DATA TABLE ────────────────────────────────────────────────────────────────
+function renderDataTable() {
+  const days = getAllDays().reverse(); // newest first
+  document.getElementById('data-count').textContent = days.length;
+  const tbody = document.getElementById('data-tbody');
+
+  if (days.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="10" style="padding:20px;text-align:center;color:var(--text3);">No data logged yet. Start by logging your meals and vitals!</td></tr>`;
+    return;
+  }
+
+  const bpColor = (s) => {
+    if (!s) return 'var(--text)';
+    return s >= 140 ? '#c0392b' : s >= 130 ? '#e8a020' : 'var(--accent2)';
+  };
+  const bsColor = (v, limit) => {
+    if (!v) return 'var(--text)';
+    return v > limit ? '#c0392b' : v > limit * 0.9 ? '#e8a020' : 'var(--accent2)';
+  };
+
+  tbody.innerHTML = days.map((d, i) => {
+    const bg = i % 2 === 0 ? 'var(--surface)' : 'var(--surface2)';
+    const fmt = (v) => v !== undefined ? v : '—';
+    const date = new Date(d.date).toLocaleDateString('en-IN', { day:'numeric', month:'short', year:'numeric' });
+    return `<tr style="background:${bg};border-bottom:1px solid var(--border);">
+      <td style="padding:10px 8px;font-weight:500;white-space:nowrap;">${date}</td>
+      <td style="padding:10px 8px;">${d.calories ? d.calories + ' kcal' : '—'}</td>
+      <td style="padding:10px 8px;">${d.steps ? d.steps.toLocaleString() : '—'}</td>
+      <td style="padding:10px 8px;">${d.dist ? d.dist + ' km' : '—'}</td>
+      <td style="padding:10px 8px;">${d.pace ? d.pace + ' min/km' : '—'}</td>
+      <td style="padding:10px 8px;">${d.weight ? d.weight + ' kg' : '—'}</td>
+      <td style="padding:10px 8px;color:${bpColor(d.bp_s)};font-weight:500;">${fmt(d.bp_s)}</td>
+      <td style="padding:10px 8px;color:${bpColor(d.bp_d)};font-weight:500;">${fmt(d.bp_d)}</td>
+      <td style="padding:10px 8px;color:${bsColor(d.bs_f, 100)};font-weight:500;">${fmt(d.bs_f)}</td>
+      <td style="padding:10px 8px;color:${bsColor(d.bs_pp, 140)};font-weight:500;">${fmt(d.bs_pp)}</td>
+    </tr>`;
+  }).join('');
+}
+
+// ── EXPORT CSV ────────────────────────────────────────────────────────────────
+function exportCSV() {
+  const days = getAllDays();
+  if (days.length === 0) { alert('No data to export yet!'); return; }
+
+  const headers = ['Date','Calories (kcal)','Steps','Distance (km)','Pace (min/km)','Weight (kg)','BP Systolic','BP Diastolic','Blood Sugar Fasting','Blood Sugar PP'];
+  const rows = days.map(d => [
+    d.date,
+    d.calories || '',
+    d.steps || '',
+    d.dist || '',
+    d.pace || '',
+    d.weight || '',
+    d.bp_s || '',
+    d.bp_d || '',
+    d.bs_f || '',
+    d.bs_pp || ''
+  ]);
+
+  const csv = [headers, ...rows].map(r => r.join(',')).join('\n');
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'fitlog-export-' + new Date().toISOString().slice(0,10) + '.csv';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ── EXPORT JSON ───────────────────────────────────────────────────────────────
+function exportJSON() {
+  const data = getStore();
+  if (Object.keys(data).length === 0) { alert('No data to export yet!'); return; }
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'fitlog-backup-' + new Date().toISOString().slice(0,10) + '.json';
+  a.click();
+  URL.revokeObjectURL(url);
 }
 
 // ── INIT ──────────────────────────────────────────────────────────────────────
