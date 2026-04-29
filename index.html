@@ -185,6 +185,38 @@ body { font-family: var(--font-b); background: var(--bg); color: var(--text); mi
 .bn-item.active { color: var(--accent); }
 .bn-icon { font-size: 20px; line-height: 1; }
 
+/* ── DATE PICKER BAR ── */
+.date-bar {
+  display: flex; align-items: center; gap: 10px;
+  margin-bottom: 20px; flex-wrap: wrap;
+}
+.date-nav-btn {
+  width: 34px; height: 34px; border-radius: 50%; border: 1px solid var(--border2);
+  background: var(--surface); color: var(--text2); font-size: 16px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; transition: all .15s; flex-shrink: 0;
+}
+.date-nav-btn:hover { background: var(--accent-bg); border-color: var(--accent); color: var(--accent); }
+.date-nav-btn:disabled { opacity: .35; cursor: default; }
+.date-input-wrap { flex: 1; min-width: 160px; }
+.date-input {
+  width: 100%; padding: 8px 12px; border: 1px solid var(--border2); border-radius: var(--rs);
+  font-family: var(--font-b); font-size: 14px; color: var(--text); background: var(--surface);
+  cursor: pointer;
+}
+.date-input:focus { outline: none; border-color: var(--accent); }
+.past-banner {
+  display: none; align-items: center; gap: 10px;
+  background: #fff8e6; border: 1px solid #f0d080; border-radius: var(--rs);
+  padding: 10px 14px; margin-bottom: 16px; font-size: 13px; color: #7a5c00;
+}
+.past-banner.show { display: flex; }
+.today-btn {
+  margin-left: auto; padding: 5px 12px; background: #f0d080; border: none;
+  border-radius: 20px; font-size: 12px; font-weight: 600; color: #7a5c00;
+  cursor: pointer; font-family: var(--font-b);
+}
+.today-btn:hover { background: #e8c840; }
+
 /* ── RESPONSIVE ── */
 @media (max-width: 700px) {
   .sidebar { display: none; }
@@ -223,12 +255,26 @@ body { font-family: var(--font-b); background: var(--bg); color: var(--text); mi
   <!-- ══════════ HOME ══════════ -->
   <div id="sec-home" class="section active">
     <div class="page-title" id="home-greeting">Good morning</div>
-    <div class="page-sub" id="home-date"></div>
+
+    <!-- DATE PICKER BAR -->
+    <div class="date-bar">
+      <button class="date-nav-btn" id="prev-day" onclick="changeDate(-1)" title="Previous day">‹</button>
+      <div class="date-input-wrap">
+        <input type="date" class="date-input" id="date-picker" onchange="onDatePicked(this.value)" />
+      </div>
+      <button class="date-nav-btn" id="next-day" onclick="changeDate(1)" title="Next day">›</button>
+    </div>
+
+    <!-- PAST DATE BANNER -->
+    <div class="past-banner" id="past-banner">
+      📅 Viewing a past date — you can still log or edit data for this day
+      <button class="today-btn" onclick="goToToday()">Go to today</button>
+    </div>
 
     <!-- MEALS ACTION / PANEL / SUMMARY -->
     <div id="meals-action" class="action-card">
       <div class="ac-left">
-        <div class="ac-title">🍽️ Log today's meals</div>
+        <div class="ac-title" id="meals-action-title">🍽️ Log today's meals</div>
         <div class="ac-sub">Tap to enter breakfast, lunch, snacks & dinner</div>
       </div>
       <button class="ac-btn" onclick="openMeals()">Log meals</button>
@@ -295,7 +341,7 @@ body { font-family: var(--font-b); background: var(--bg); color: var(--text); mi
     <!-- VITALS ACTION / PANEL / SUMMARY -->
     <div id="vitals-action" class="action-card">
       <div class="ac-left">
-        <div class="ac-title">💊 Log today's vitals</div>
+        <div class="ac-title" id="vitals-action-title">💊 Log today's vitals</div>
         <div class="ac-sub">Steps, weight, blood pressure & blood sugar</div>
       </div>
       <button class="ac-btn" onclick="openVitals()">Log vitals</button>
@@ -471,13 +517,106 @@ async function callGemini(systemPrompt, userMessage, maxTokens) {
   return data.candidates[0].content.parts[0].text.trim();
 }
 
-// ── DATE / GREETING ──────────────────────────────────────────────────────────
+// ── DATE MANAGEMENT ──────────────────────────────────────────────────────────
 const now = new Date();
-const TODAY = now.toISOString().slice(0,10);
-const hr = now.getHours();
-const greeting = hr < 12 ? 'Good morning' : hr < 17 ? 'Good afternoon' : 'Good evening';
-document.getElementById('home-greeting').textContent = greeting;
-document.getElementById('home-date').textContent = now.toLocaleDateString('en-IN', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
+const REAL_TODAY = now.toISOString().slice(0, 10);
+let ACTIVE_DATE = REAL_TODAY;
+
+function formatDateKey(d) { return d instanceof Date ? d.toISOString().slice(0,10) : d; }
+
+function initDatePicker() {
+  const picker = document.getElementById('date-picker');
+  picker.max = REAL_TODAY;
+  picker.value = ACTIVE_DATE;
+  updateDateUI();
+}
+
+function onDatePicked(val) {
+  if (!val || val > REAL_TODAY) return;
+  ACTIVE_DATE = val;
+  updateDateUI();
+  loadDateData();
+}
+
+function changeDate(delta) {
+  const d = new Date(ACTIVE_DATE);
+  d.setDate(d.getDate() + delta);
+  const newKey = formatDateKey(d);
+  if (newKey > REAL_TODAY) return;
+  ACTIVE_DATE = newKey;
+  document.getElementById('date-picker').value = ACTIVE_DATE;
+  updateDateUI();
+  loadDateData();
+}
+
+function goToToday() {
+  ACTIVE_DATE = REAL_TODAY;
+  document.getElementById('date-picker').value = REAL_TODAY;
+  updateDateUI();
+  loadDateData();
+}
+
+function updateDateUI() {
+  const isToday = ACTIVE_DATE === REAL_TODAY;
+  const d = new Date(ACTIVE_DATE + 'T00:00:00');
+  const friendly = d.toLocaleDateString('en-IN', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
+
+  // greeting
+  const hr = now.getHours();
+  const greet = isToday ? (hr < 12 ? 'Good morning' : hr < 17 ? 'Good afternoon' : 'Good evening') : friendly;
+  document.getElementById('home-greeting').textContent = greet;
+
+  // past banner
+  document.getElementById('past-banner').classList.toggle('show', !isToday);
+
+  // next-day button disabled if today
+  document.getElementById('next-day').disabled = isToday;
+
+  // action card titles
+  const label = isToday ? "today's" : d.toLocaleDateString('en-IN',{day:'numeric',month:'short'});
+  document.getElementById('meals-action-title').textContent = `🍽️ Log ${label} meals`;
+  document.getElementById('vitals-action-title').textContent = `💊 Log ${label} vitals`;
+}
+
+function loadDateData() {
+  // Reset all panels to default state
+  document.getElementById('meals-panel').classList.remove('open');
+  document.getElementById('vitals-panel').classList.remove('open');
+  document.getElementById('meals-action').style.display = 'flex';
+  document.getElementById('meals-summary').style.display = 'none';
+  document.getElementById('vitals-action').style.display = 'flex';
+  document.getElementById('vitals-summary').style.display = 'none';
+  document.getElementById('daily-cards').style.display = 'none';
+
+  // Reset meal state
+  Object.keys(mealCals).forEach(k => mealCals[k] = 0);
+  Object.keys(snackCals).forEach(k => delete snackCals[k]);
+  ['breakfast','lunch','dinner'].forEach(m => {
+    const ta = document.getElementById('meal-'+m);
+    if (ta) ta.value = '';
+    const r = document.getElementById('result-'+m);
+    if (r) { r.classList.remove('show'); r.innerHTML = ''; }
+  });
+  document.getElementById('snacks-container').innerHTML = '';
+  snackCount = 0;
+  updateTotalDisplay();
+
+  // Reset vitals fields
+  ['v-steps','v-dist','v-pace','v-weight','v-bps','v-bpd','v-bsf','v-bspp'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+
+  // Load existing data for the selected date
+  const s = getStore();
+  const td = s[ACTIVE_DATE] || {};
+
+  if (td.calories !== undefined) renderMealsSummary();
+  if (td.steps || td.weight || td.bp_s) renderVitalsSummary();
+  checkShowDailyCards();
+}
+
+// ── DATE / GREETING ──────────────────────────────────────────────────────────
 document.getElementById('nav-date').textContent = now.toLocaleDateString('en-IN', { weekday:'long', day:'numeric', month:'short' });
 
 // ── NAVIGATION ───────────────────────────────────────────────────────────────
@@ -493,12 +632,12 @@ function showSection(id, btn) {
 // ── STORAGE ──────────────────────────────────────────────────────────────────
 function getStore() { try { return JSON.parse(localStorage.getItem('fitlog') || '{}'); } catch { return {}; } }
 function setStore(d) { localStorage.setItem('fitlog', JSON.stringify(d)); }
-function getTodayData() { return getStore()[TODAY] || {}; }
+function getTodayData() { return getStore()[ACTIVE_DATE] || {}; }
 function getAllDays() { const s = getStore(); return Object.keys(s).sort().map(k => ({ date:k, ...s[k] })); }
 function saveTodayField(fields) {
   const s = getStore();
-  if (!s[TODAY]) s[TODAY] = {};
-  Object.assign(s[TODAY], fields);
+  if (!s[ACTIVE_DATE]) s[ACTIVE_DATE] = {};
+  Object.assign(s[ACTIVE_DATE], fields);
   setStore(s);
 }
 
@@ -803,13 +942,13 @@ function exportCSV() {
   const headers = ['Date','Calories (kcal)','Steps','Distance (km)','Pace (min/km)','Weight (kg)','BP Systolic','BP Diastolic','Blood Sugar Fasting (mg/dL)','Blood Sugar PP (mg/dL)'];
   const rows = days.map(d => [d.date, d.calories||'', d.steps||'', d.dist||'', d.pace||'', d.weight||'', d.bp_s||'', d.bp_d||'', d.bs_f||'', d.bs_pp||'']);
   const csv = [headers,...rows].map(r=>r.join(',')).join('\n');
-  const a = Object.assign(document.createElement('a'), { href: URL.createObjectURL(new Blob([csv],{type:'text/csv'})), download: 'fitlog-'+TODAY+'.csv' });
+  const a = Object.assign(document.createElement('a'), { href: URL.createObjectURL(new Blob([csv],{type:'text/csv'})), download: 'fitlog-'+REAL_TODAY+'.csv' });
   a.click();
 }
 function exportJSON() {
   const data = getStore();
   if (!Object.keys(data).length) { alert('No data to export yet!'); return; }
-  const a = Object.assign(document.createElement('a'), { href: URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],{type:'application/json'})), download: 'fitlog-backup-'+TODAY+'.json' });
+  const a = Object.assign(document.createElement('a'), { href: URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],{type:'application/json'})), download: 'fitlog-backup-'+REAL_TODAY+'.json' });
   a.click();
 }
 function clearAll() {
@@ -820,11 +959,8 @@ function clearAll() {
 }
 
 // ── INIT ──────────────────────────────────────────────────────────────────────
-// Restore today's state if already logged
-const td = getTodayData();
-if (td.calories !== undefined) renderMealsSummary();
-if (td.steps || td.weight || td.bp_s) renderVitalsSummary();
-checkShowDailyCards();
+initDatePicker();
+loadDateData();
 </script>
 </body>
 </html>
