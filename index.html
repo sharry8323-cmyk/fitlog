@@ -520,7 +520,25 @@
 </div>
 
 <script>
-const API_KEY_PLACEHOLDER = 'YOUR_API_KEY'; // Handled by platform
+let API_KEY = localStorage.getItem('fitlog_gemini_key') || '';
+if (!API_KEY) {
+  API_KEY = prompt('Enter your free Gemini API key to enable AI features:\n\nGet one free at: aistudio.google.com\n→ Sign in with Google → click "Get API Key" → Create API key\n\nNo credit card needed!') || '';
+  if (API_KEY) localStorage.setItem('fitlog_gemini_key', API_KEY);
+}
+
+async function callGemini(systemPrompt, userMessage, maxTokens) {
+  const resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${API_KEY}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      contents: [{ parts: [{ text: systemPrompt + '\n\nUser: ' + userMessage }] }],
+      generationConfig: { maxOutputTokens: maxTokens, temperature: 0.3 }
+    })
+  });
+  const data = await resp.json();
+  if (data.error) throw new Error(data.error.message);
+  return data.candidates[0].content.parts[0].text.trim();
+}
 
 // ── DATE ────────────────────────────────────────────────────────────────────
 const now = new Date();
@@ -586,22 +604,13 @@ async function calcMeal(slot, snackId) {
   resultEl.classList.remove('show');
 
   try {
-    const resp = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 400,
-        system: `You are a nutrition assistant. When given a description of Indian or international food items, estimate total calories. 
-Reply ONLY with valid JSON in this exact format (no markdown, no explanation):
+    const systemPrompt = `You are a nutrition assistant. When given a description of Indian or international food items, estimate total calories.
+Reply ONLY with valid JSON in this exact format (no markdown, no code blocks, no explanation whatsoever):
 {"items":[{"name":"item name","qty":"portion","kcal":number}],"total":number,"note":"brief tip if any"}
-Use standard Indian portion sizes. Be realistic and accurate.`,
-        messages: [{ role: 'user', content: text }]
-      })
-    });
-    const data = await resp.json();
-    const raw = data.content[0].text.trim();
-    const parsed = JSON.parse(raw);
+Use standard Indian portion sizes. Be realistic and accurate.`;
+    const raw = await callGemini(systemPrompt, text, 400);
+    const clean = raw.replace(/```json|```/g, '').trim();
+    const parsed = JSON.parse(clean);
 
     // render
     let html = parsed.items.map(it =>
@@ -825,21 +834,13 @@ async function generateSuggestions() {
   ).join('\n');
 
   try {
-    const resp = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 1000,
-        system: `You are a health coach analysing a user's daily health log. Provide 4–5 specific, actionable suggestions.
-Reply ONLY with valid JSON, no markdown:
+    const systemPrompt = `You are a health coach analysing a user's daily health log. Provide 4-5 specific, actionable suggestions.
+Reply ONLY with valid JSON, no markdown, no code blocks:
 {"suggestions":[{"title":"short title","body":"2-3 sentence specific advice","type":"diet|exercise|health","icon":"single emoji"}]}
-Be specific, reference actual numbers from their data. Focus on Indian lifestyle where relevant.`,
-        messages: [{ role: 'user', content: `Here is my last 14 days of health data:\n${summary}\n\nPlease give me specific suggestions.` }]
-      })
-    });
-    const data = await resp.json();
-    const parsed = JSON.parse(data.content[0].text.trim());
+Be specific, reference actual numbers from their data. Focus on Indian lifestyle where relevant.`;
+    const raw = await callGemini(systemPrompt, `Here is my last 14 days of health data:\n${summary}\n\nPlease give me specific suggestions.`, 1000);
+    const clean = raw.replace(/```json|```/g, '').trim();
+    const parsed = JSON.parse(clean);
     renderSuggestions(parsed.suggestions);
   } catch(e) {
     document.getElementById('sug-list').innerHTML = `<div class="sug-item"><div class="sug-icon icon-orange">⚠️</div><div><div class="sug-title">Could not generate suggestions</div><div class="sug-body">Please check your internet connection and try again.</div></div></div>`;
