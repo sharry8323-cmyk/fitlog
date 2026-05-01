@@ -1055,11 +1055,16 @@ function exportJSON() {
   if(!Object.keys(data).length){alert('No data to export yet!');return;}
   Object.assign(document.createElement('a'),{href:URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],{type:'application/json'})),download:'fitlog-backup-'+REAL_TODAY+'.json'}).click();
 }
-function clearAll() {
-  if(confirm('This will permanently delete ALL your FitLog data. Are you sure?')){
-    localStorage.removeItem('fitlog');
-    location.reload();
-  }
+async function clearAll() {
+  if(!confirm('This will permanently delete ALL your FitLog data from the app AND Google Sheets. Are you sure?')) return;
+  // Clear from Google Sheets first
+  try {
+    await fetch(CUSTOM_SHEETS_URL+'?action=clearAll', {method:'GET'});
+  } catch(e) { console.warn('Could not clear Sheets:', e); }
+  // Clear local storage
+  localStorage.removeItem('fitlog');
+  showToast('All data cleared ✓');
+  setTimeout(() => location.reload(), 1000);
 }
 
 // ── INIT ──────────────────────────────────────────────────────────────────────
