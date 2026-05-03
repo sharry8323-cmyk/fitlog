@@ -524,7 +524,7 @@ function showToast(msg, duration=2500) {
 
 // ── GEMINI API ────────────────────────────────────────────────────────────────
 async function callGemini(systemPrompt, userMessage, maxTokens=800) {
-  const resp = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent', {
+  const resp = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent', {
     method:'POST',
     headers:{'Content-Type':'application/json','x-goog-api-key':GEMINI_KEY},
     body:JSON.stringify({
@@ -614,7 +614,7 @@ async function syncToSheets(date, dayData) {
     bs_pp:    dayData.bs_pp||''
   });
   try {
-    await fetch(url+'?'+params.toString(), {method:'GET'});
+    await fetch(url+'?'+params.toString(), {method:'GET', mode:'no-cors'});
     showToast('Synced to Google Sheets ✓');
   } catch(e) {
     console.warn('Sheets sync failed:', e);
@@ -624,6 +624,11 @@ async function syncToSheets(date, dayData) {
 async function loadFromSheets() {
   const url = CUSTOM_SHEETS_URL;
   if (!url) return;
+  // Don't re-import if user just cleared data
+  if (localStorage.getItem('fitlog_cleared') === 'yes') {
+    localStorage.removeItem('fitlog_cleared');
+    return;
+  }
   const ss = document.getElementById('sync-status');
   ss.style.display='flex'; ss.className='sync-status sync-info'; ss.textContent='⟳ Syncing with Google Sheets…';
   try {
@@ -687,14 +692,17 @@ function openVitals() {
 function editVitals() { openVitals(); }
 
 // ── CALCULATE ALL MEALS (single API call) ─────────────────────────────────────
+let isCalculating = false;
+
 async function calcAllMeals() {
+  if (isCalculating) return; // prevent double tap
+
   const meals = {
     breakfast: document.getElementById('meal-breakfast').value.trim(),
     lunch:     document.getElementById('meal-lunch').value.trim(),
     dinner:    document.getElementById('meal-dinner').value.trim()
   };
 
-  // collect snacks
   const snacks = [];
   document.querySelectorAll('[id^="snack-input-"]').forEach(el => {
     const t = el.value.trim();
@@ -705,10 +713,11 @@ async function calcAllMeals() {
   if (!anyMeal) { showToast('Please describe at least one meal first'); return; }
   if (!GEMINI_KEY) { openSettings(); return; }
 
+  isCalculating = true;
   const btn = document.getElementById('calc-all-btn');
-  btn.disabled=true; btn.textContent='✨ Calculating…';
+  btn.disabled = true;
+  btn.textContent = '✨ Calculating…';
 
-  // Build prompt with all meals
   const mealLines = [];
   if (meals.breakfast) mealLines.push(`BREAKFAST: ${meals.breakfast}`);
   if (meals.lunch)     mealLines.push(`LUNCH: ${meals.lunch}`);
@@ -719,12 +728,12 @@ async function calcAllMeals() {
 
   try {
     const raw = await callGemini(sys, mealLines.join('\n'), 900);
-    const parsed = JSON.parse(raw.replace(/```json|```/g,'').trim());
+    const cleaned = raw.replace(/```json|```/g,'').trim();
+    const parsed = JSON.parse(cleaned);
 
-    // Render results per meal
     const slotMap = {BREAKFAST:'breakfast',LUNCH:'lunch',DINNER:'dinner'};
     Object.entries(parsed.meals).forEach(([key,data]) => {
-      let resultId, snackId;
+      let resultId;
       if (slotMap[key]) {
         resultId = 'result-'+slotMap[key];
         mealCals[slotMap[key]] = data.total;
@@ -740,23 +749,31 @@ async function calcAllMeals() {
         if (el) {
           let html = data.items.map(it=>`<span style="color:var(--text2)">${it.name} (${it.qty})</span> — <strong>${it.kcal} kcal</strong>`).join(' · ');
           html += `<br/><strong style="color:var(--accent)">Total: ${data.total} kcal</strong>`;
-          el.innerHTML=html; el.classList.add('show');
+          el.innerHTML = html; el.classList.add('show');
         }
       }
     });
 
     updateTotalDisplay();
     if (parsed.note) showToast('💡 '+parsed.note, 4000);
-
-    // Show save button
-    document.getElementById('save-meals-btn').style.display='block';
-    btn.textContent='✨ Recalculate';
+    document.getElementById('save-meals-btn').style.display = 'block';
+    btn.textContent = '✨ Recalculate';
 
   } catch(e) {
-    showToast('Could not calculate — check API key in Settings ⚙️', 3500);
-    btn.textContent='✨ Calculate all calories';
+    const msg = e.message || '';
+    if (msg.includes('429')) {
+      showToast('Too many requests — please wait 30 seconds and try again', 4000);
+    } else if (msg.includes('API key') || msg.includes('403')) {
+      showToast('Invalid API key — check Settings ⚙️', 4000);
+    } else {
+      showToast('Could not calculate — please try again in a moment', 3500);
+    }
+    console.error('Gemini error:', e);
+    btn.textContent = '✨ Calculate all calories';
+  } finally {
+    btn.disabled = false;
+    isCalculating = false;
   }
-  btn.disabled=false;
 }
 
 // ── SAVE MEALS ────────────────────────────────────────────────────────────────
@@ -1057,12 +1074,14 @@ function exportJSON() {
 }
 async function clearAll() {
   if(!confirm('This will permanently delete ALL your FitLog data from the app AND Google Sheets. Are you sure?')) return;
-  // Clear from Google Sheets first
-  try {
-    await fetch(CUSTOM_SHEETS_URL+'?action=clearAll', {method:'GET'});
-  } catch(e) { console.warn('Could not clear Sheets:', e); }
-  // Clear local storage
+  // Always clear local first so app is clean regardless
   localStorage.removeItem('fitlog');
+  localStorage.setItem('fitlog_cleared', 'yes');
+  // Then try to clear Google Sheets (best effort)
+  try {
+    const url = CUSTOM_SHEETS_URL + '?action=clearAll';
+    await fetch(url, {method:'GET', mode:'no-cors'});
+  } catch(e) { console.warn('Could not clear Sheets:', e); }
   showToast('All data cleared ✓');
   setTimeout(() => location.reload(), 1000);
 }
